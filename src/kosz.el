@@ -22,6 +22,53 @@
 ;;; Code:
 
 
+
+(defconst @:manifest-file "package.kosz")
+
+
+
+(define-error '@:external-process-error
+  "Externall process ends with error")
+
+
+
+(defun @::buffer-string ()
+  (buffer-substring-no-properties (point-min) (point-max)))
+
+(defun @::call-process (program directory &rest args)
+  (let* ((default-directory (or directory default-directory))
+         (process-exit-code nil))
+    (with-temp-buffer
+      (setf process-exit-code (apply #'call-process program nil t nil args))
+      (if (= 0 process-exit-code)
+          (@::buffer-string)
+        (signal '@:external-process-error
+                (list (cons :process   program)
+                      (cons :args      args)
+                      (cons :exit-code process-exit-code)
+                      (cons :output    (@::buffer-string))))))))
+
+(defun @::define-package ()
+  `(defun define-package (name version &rest properties)
+     (plist-put properties :name name)
+     (plist-put properties :version version)
+     (prin1 properties)
+     (setf kill-emacs-hook nil)
+     (kill-emacs)))
+
+
+
+(defun @:read-manifest (directory)
+  (with-temp-buffer
+    (insert
+     (@::call-process "emacs" directory
+                      "--batch" "--quick"
+                      "--eval" (format "%S" (@::define-package))
+                      "--load" (expand-file-name @:manifest-file)))
+    (cons directory (sexp-at-point))))
+
+
+
 (provide 'kosz)
 
 ;; Local Variables:
