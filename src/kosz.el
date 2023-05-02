@@ -56,6 +56,34 @@
      (setf kill-emacs-hook nil)
      (kill-emacs)))
 
+(defun @::manifest->define-package (manifest)
+  (let* ((name         (plist-get manifest :name))
+         (version      (plist-get manifest :version))
+         (description  (plist-get manifest :description))
+         (dependencies (plist-get manifest :dependencies))
+         (url          (plist-get manifest :url))
+         (commit       (plist-get manifest :commit))
+         (keywords     (plist-get manifest :keywords))
+         (maintainer   (plist-get manifest :maintainer))
+         (authors      (plist-get manifest :authors)))
+    (list 'define-package
+          (format "%s" name)
+          version
+          description
+          dependencies
+          :url        url
+          :commit     commit
+          :keywords   keywords
+          :maintainer maintainer
+          :authors (seq-into authors 'list))))
+
+(defun @::generate-pkg-file (manifest directory)
+  (let* ((name      (plist-get manifest :name))
+         (file-name (format "%s-pkg.el" name)))
+    (with-temp-file (file-name-concat directory file-name)
+      (insert (format "%S\n" (@::manifest->define-package manifest))
+              "\n;; Local Variables:\n;; no-byte-compile: t\n;; End:"))))
+
 
 
 (defun @:read-manifest (directory)
@@ -68,6 +96,25 @@
                       "--load" @:manifest-file))
     (cons (abbreviate-file-name directory)
           (sexp-at-point))))
+
+(defun @:build-for-package-el (manifest)
+  (let* ((root              (car manifest))
+         (manifest*         (cdr manifest))
+         (package-fullname  (format "%s-%s"
+                                    (plist-get manifest* :name)
+                                    (plist-get manifest* :version)))
+         (build-directory   (file-name-concat root "build"))
+         (package-directory (file-name-concat build-directory package-fullname))
+         (package-tar-file  (format "%s.tar" package-fullname)))
+    (unwind-protect
+        (progn
+          (make-directory package-directory t)
+          (@::generate-pkg-file manifest* package-directory)
+          (@::call-process "tar" build-directory
+                           "-cf" package-tar-file
+                           package-fullname)
+          (expand-file-name package-tar-file build-directory))
+      (delete-directory package-directory t))))
 
 
 
