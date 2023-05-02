@@ -59,13 +59,15 @@
 
 
 (defun @:read-manifest (directory)
+  (setq directory (expand-file-name directory))
   (with-temp-buffer
     (insert
      (@::call-process "emacs" directory
                       "--batch" "--quick"
                       "--eval" (format "%S" (@::define-package))
-                      "--load" (expand-file-name @:manifest-file)))
-    (cons directory (sexp-at-point))))
+                      "--load" @:manifest-file))
+    (cons (abbreviate-file-name directory)
+          (sexp-at-point))))
 
 
 
