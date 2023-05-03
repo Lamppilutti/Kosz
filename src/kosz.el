@@ -30,6 +30,9 @@
 (define-error '$:external-process-error
   "Externall process ends with error")
 
+(define-error '$:manifest-validation-error
+  "Invalid manifest properties")
+
 
 
 (defun $::buffer-string ()
@@ -97,6 +100,19 @@
                       "--load" $:manifest-file))
     (cons (abbreviate-file-name directory)
           (sexp-at-point))))
+
+(defun $:validate-manifest (manifest)
+  (setq manifest (cdr manifest))
+  (let* ((name    (plist-get manifest :name))
+         (version (plist-get manifest :version)))
+    (when (not (and (symbolp name) (not (null name))))
+      (signal '$:manifest-validation-error
+              (list (cons :property 'package-name)
+                    (cons :value     name))))
+    (when (not (and (stringp version) (not (string-blank-p version))))
+      (signal '$:manifest-validation-error
+              (list (cons :property 'package-version)
+                    (cons :value     version))))))
 
 (defun $:build-for-package-el (manifest)
   (let* ((root              (car manifest))
