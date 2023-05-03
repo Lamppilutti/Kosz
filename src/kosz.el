@@ -23,32 +23,32 @@
 
 
 
-(defconst @:manifest-file "package.kosz")
+(defconst $:manifest-file "package.kosz")
 
 
 
-(define-error '@:external-process-error
+(define-error '$:external-process-error
   "Externall process ends with error")
 
 
 
-(defun @::buffer-string ()
+(defun $::buffer-string ()
   (buffer-substring-no-properties (point-min) (point-max)))
 
-(defun @::call-process (program directory &rest args)
+(defun $::call-process (program directory &rest args)
   (let* ((default-directory (or directory default-directory))
          (process-exit-code nil))
     (with-temp-buffer
       (setf process-exit-code (apply #'call-process program nil t nil args))
       (if (= 0 process-exit-code)
-          (@::buffer-string)
-        (signal '@:external-process-error
+          ($::buffer-string)
+        (signal '$:external-process-error
                 (list (cons :process   program)
                       (cons :args      args)
                       (cons :exit-code process-exit-code)
-                      (cons :output    (@::buffer-string))))))))
+                      (cons :output    ($::buffer-string))))))))
 
-(defun @::define-package ()
+(defun $::define-package ()
   `(defun define-package (name version &rest properties)
      (plist-put properties :name name)
      (plist-put properties :version version)
@@ -56,7 +56,7 @@
      (setf kill-emacs-hook nil)
      (kill-emacs)))
 
-(defun @::manifest->define-package (manifest)
+(defun $::manifest->define-package (manifest)
   (let* ((name         (plist-get manifest :name))
          (version      (plist-get manifest :version))
          (description  (plist-get manifest :description))
@@ -77,27 +77,28 @@
           :maintainer maintainer
           :authors (seq-into authors 'list))))
 
-(defun @::generate-pkg-file (manifest directory)
+(defun $::generate-pkg-file (manifest directory)
   (let* ((name      (plist-get manifest :name))
          (file-name (format "%s-pkg.el" name)))
     (with-temp-file (file-name-concat directory file-name)
-      (insert (format "%S\n" (@::manifest->define-package manifest))
-              "\n;; Local Variables:\n;; no-byte-compile: t\n;; End:"))))
+      (insert (format "%S\n" ($::manifest->define-package manifest))
+              ;;; Monolitic line breaks emacs.
+              "\n;; Local" "Variables:\n;; no-byte-compile: t\n;; End:"))))
 
 
 
-(defun @:read-manifest (directory)
+(defun $:read-manifest (directory)
   (setq directory (expand-file-name directory))
   (with-temp-buffer
     (insert
-     (@::call-process "emacs" directory
+     ($::call-process "emacs" directory
                       "--batch" "--quick"
-                      "--eval" (format "%S" (@::define-package))
-                      "--load" @:manifest-file))
+                      "--eval" (format "%S" ($::define-package))
+                      "--load" $:manifest-file))
     (cons (abbreviate-file-name directory)
           (sexp-at-point))))
 
-(defun @:build-for-package-el (manifest)
+(defun $:build-for-package-el (manifest)
   (let* ((root              (car manifest))
          (manifest*         (cdr manifest))
          (package-fullname  (format "%s-%s"
@@ -109,8 +110,8 @@
     (unwind-protect
         (progn
           (make-directory package-directory t)
-          (@::generate-pkg-file manifest* package-directory)
-          (@::call-process "tar" build-directory
+          ($::generate-pkg-file manifest* package-directory)
+          ($::call-process "tar" build-directory
                            "-cf" package-tar-file
                            package-fullname)
           (expand-file-name package-tar-file build-directory))
@@ -121,8 +122,8 @@
 (provide 'kosz)
 
 ;; Local Variables:
-;; read-symbol-shorthands: (("@::" . "kosz--")
-;;                          ("@:"  . "kosz-"))
+;; read-symbol-shorthands: (("$::" . "kosz--")
+;;                          ("$:"  . "kosz-"))
 ;; End:
 
 ;;; kosz.el ends here.
