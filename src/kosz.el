@@ -56,16 +56,22 @@
                       (cons :exit-code process-exit-code)
                       (cons :output    ($::buffer-string))))))))
 
+(defun $::copy-file (file newname)
+  (let* ((destination (file-name-directory newname)))
+    (when (not (file-exists-p destination))
+      (make-directory destination t))
+    (copy-file file newname)))
+
 (defun $::directory-files-recursively (file)
   (if (file-directory-p file)
       (directory-files-recursively file directory-files-no-dot-files-regexp
                                    nil nil t)
     (list file)))
 
-(defun $::expand-files (files default-directory)
+(defun $::expand-files (files directory)
   (let* ((expanded-files (list "")))
     (dolist (file files expanded-files)
-      (~>> (expand-file-name file default-directory)
+      (~>> (expand-file-name file directory)
            ($::directory-files-recursively)
            (nconc expanded-files)))))
 
@@ -118,6 +124,19 @@
                  (equal ".el" (file-name-extension file t)))
         (copy-file file default-directory t)))))
 
+(defun $::collect-assets (manifest)
+  (let* ((root            (car manifest))
+         (manifest*       (cdr manifest))
+         (assets-includes (~> (plist-get manifest* :assets)
+                              ($::expand-files root)))
+         (assets-excludes (~> (plist-get manifest* :assets-exclude)
+                              ($::expand-files root))))
+    (dolist (file assets-includes)
+      (when (not (member file assets-excludes))
+        (~>> (file-relative-name file root)
+             (file-name-concat default-directory)
+             ($::copy-file file))))))
+
 
 
 (defun $:read-manifest (directory)
@@ -159,6 +178,7 @@
           (make-directory package-directory t)
           ($::generate-pkg-file manifest*)
           ($::collect-src manifest)
+          ($::collect-assets manifest)
           ($::call-process "tar" build-directory
                            "-cf" package-tar-file
                            package-fullname)
