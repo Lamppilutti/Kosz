@@ -23,6 +23,11 @@
 
 
 
+(eval-when-compile
+  (require 'subr-x))
+
+
+
 (defconst $:manifest-file "package.kosz")
 
 
@@ -50,6 +55,19 @@
                       (cons :args      args)
                       (cons :exit-code process-exit-code)
                       (cons :output    ($::buffer-string))))))))
+
+(defun $::directory-files-recursively (file)
+  (if (file-directory-p file)
+      (directory-files-recursively file directory-files-no-dot-files-regexp
+                                   nil nil t)
+    (list file)))
+
+(defun $::expand-files (files default-directory)
+  (let* ((expanded-files (list "")))
+    (dolist (file files expanded-files)
+      (~>> (expand-file-name file default-directory)
+           ($::directory-files-recursively)
+           (nconc expanded-files)))))
 
 (defun $::define-package ()
   `(defun define-package (name version &rest properties)
@@ -87,6 +105,18 @@
       (insert (format "%S\n" ($::manifest->define-package manifest))
               ;;; Monolitic line breaks emacs.
               "\n;; Local" "Variables:\n;; no-byte-compile: t\n;; End:"))))
+
+(defun $::collect-src (manifest)
+  (let* ((root         (car manifest))
+         (manifest*    (cdr manifest))
+         (src-includes (~> (plist-get manifest* :src)
+                           ($::expand-files root)))
+         (src-excludes (~> (plist-get manifest* :src-exclude)
+                           ($::expand-files root))))
+    (dolist (file src-includes)
+      (when (and (not (member file src-excludes))
+                 (equal ".el" (file-name-extension file t)))
+        (copy-file file default-directory t)))))
 
 
 
@@ -128,6 +158,7 @@
         (progn
           (make-directory package-directory t)
           ($::generate-pkg-file manifest*)
+          ($::collect-src manifest)
           ($::call-process "tar" build-directory
                            "-cf" package-tar-file
                            package-fullname)
@@ -140,7 +171,9 @@
 
 ;; Local Variables:
 ;; read-symbol-shorthands: (("$::" . "kosz--")
-;;                          ("$:"  . "kosz-"))
+;;                          ("$:"  . "kosz-")
+;;                          ("~>>" . "thread-last")
+;;                          ("~>"  . "thread-first"))
 ;; End:
 
 ;;; kosz.el ends here.
