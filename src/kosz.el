@@ -80,10 +80,10 @@
           :maintainer maintainer
           :authors (seq-into authors 'list))))
 
-(defun $::generate-pkg-file (manifest directory)
+(defun $::generate-pkg-file (manifest)
   (let* ((name      (plist-get manifest :name))
          (file-name (format "%s-pkg.el" name)))
-    (with-temp-file (file-name-concat directory file-name)
+    (with-temp-file file-name
       (insert (format "%S\n" ($::manifest->define-package manifest))
               ;;; Monolitic line breaks emacs.
               "\n;; Local" "Variables:\n;; no-byte-compile: t\n;; End:"))))
@@ -120,13 +120,14 @@
          (package-fullname  (format "%s-%s"
                                     (plist-get manifest* :name)
                                     (plist-get manifest* :version)))
+         (package-tar-file  (format "%s.tar" package-fullname))
          (build-directory   (file-name-concat root "build"))
          (package-directory (file-name-concat build-directory package-fullname))
-         (package-tar-file  (format "%s.tar" package-fullname)))
+         (default-directory (file-name-as-directory package-directory)))
     (unwind-protect
         (progn
           (make-directory package-directory t)
-          ($::generate-pkg-file manifest* package-directory)
+          ($::generate-pkg-file manifest*)
           ($::call-process "tar" build-directory
                            "-cf" package-tar-file
                            package-fullname)
