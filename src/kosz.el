@@ -105,6 +105,7 @@
           :authors (seq-into authors 'list))))
 
 (defun $::generate-pkg-file (manifest)
+  (setf manifest (cdr manifest))
   (let* ((name      (plist-get manifest :name))
          (file-name (format "%s-pkg.el" name)))
     (with-temp-file file-name
@@ -176,7 +177,7 @@
     (unwind-protect
         (progn
           (make-directory package-directory t)
-          ($::generate-pkg-file manifest*)
+          ($::generate-pkg-file manifest)
           ($::collect-src manifest)
           ($::collect-assets manifest)
           ($::call-process "tar" build-directory
