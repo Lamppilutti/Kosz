@@ -68,12 +68,24 @@
                                    nil nil t)
     (list file)))
 
+(defun $::temporary-file-directory ()
+  (~>> (time-convert nil 'integer)
+       (format "kosz-%s")
+       (file-name-concat (temporary-file-directory))
+       (file-name-as-directory)))
+
 (defun $::expand-files (files directory)
   (let* ((expanded-files (list "")))
     (dolist (file files expanded-files)
       (~>> (expand-file-name file directory)
            ($::directory-files-recursively)
            (nconc expanded-files)))))
+
+(defun $::makeinfo (files directory)
+  (apply #'$::call-process "makeinfo" directory files)
+  (dolist (file ($::directory-files-recursively directory))
+    ($::call-process "install-info" directory file "dir"))
+  ($::directory-files-recursively directory))
 
 (defun $::define-package ()
   `(defun define-package (name version &rest properties)
@@ -138,6 +150,25 @@
              (file-name-concat default-directory)
              ($::copy-file file))))))
 
+(defun $::collect-docs (manifest)
+  (let* ((root           (car manifest))
+         (manifest*      (cdr manifest))
+         (docs-includes  (~> (plist-get manifest* :docs)
+                             ($::expand-files root)))
+         (docs-excludes  (~> (plist-get manifest* :docs-exclude)
+                             ($::expand-files root)))
+         (temp-directory ($::temporary-file-directory)))
+    (unwind-protect
+        (progn
+          (make-directory temp-directory t)
+          (dolist (file docs-includes)
+            (when (or (not (equal ".texi" (file-name-extension file t)))
+                      (member file docs-excludes))
+              (setq docs-includes (delete file docs-includes))))
+          (dolist (file ($::makeinfo docs-includes temp-directory))
+            (rename-file file default-directory)))
+      (delete-directory temp-directory t))))
+
 
 
 (defun $:read-manifest (directory)
@@ -180,6 +211,7 @@
           ($::generate-pkg-file manifest)
           ($::collect-src manifest)
           ($::collect-assets manifest)
+          ($::collect-docs manifest)
           ($::call-process "tar" build-directory
                            "-cf" package-tar-file
                            package-fullname)
