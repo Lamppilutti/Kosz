@@ -47,7 +47,7 @@
   (let* ((default-directory (or directory default-directory))
          (process-exit-code nil))
     (with-temp-buffer
-      (setf process-exit-code (apply #'call-process program nil t nil args))
+      (setq process-exit-code (apply #'call-process program nil t nil args))
       (if (= 0 process-exit-code)
           ($::buffer-string)
         (signal '$:external-process-error
@@ -92,11 +92,11 @@
      (plist-put properties :name name)
      (plist-put properties :version version)
      (prin1 properties)
-     (setf kill-emacs-hook nil)
+     (setq kill-emacs-hook nil)
      (kill-emacs)))
 
 (defun $::generate-pkg-file (manifest)
-  (setf manifest (cdr manifest))
+  (setq manifest (cdr manifest))
   (let* ((name      (plist-get manifest :name))
          (file-name (format "%s-pkg.el" name)))
     (with-temp-file file-name
