@@ -102,7 +102,7 @@
     (with-temp-file file-name
       (insert (format "%S\n" ($:manifest->define-package manifest))
               ;;; Monolitic line breaks emacs.
-              "\n;; Local" "Variables:\n;; no-byte-compile: t\n;; End:"))))
+              "\n;; Local " "Variables:\n;; no-byte-compile: t\n;; End:"))))
 
 (defun $::collect-src (manifest)
   (let* ((root         (car manifest))
