@@ -81,6 +81,69 @@
            ($::directory-files-recursively)
            (nconc expanded-files)))))
 
+(defun $::version-string-p (object)
+  (condition-case _
+      (version-to-list object)
+    (error nil)))
+
+(defun $::not-blank-string-p (object)
+  (and (stringp object)
+       (not (string-blank-p object))))
+
+(defun $::not-blank-string-or-null-p (object)
+  (or (and (stringp object)
+           (not (string-blank-p object)))
+      (null object)))
+
+(defun $::not-nil-symbol-p (object)
+  (and (symbolp object)
+       (not (null object))))
+
+(defun $::list-of-pairs-p (object car-pred cadr-pred)
+  (and (proper-list-p object)
+       (~>> object
+            (mapcar
+             (lambda (elm)
+               (and (funcall car-pred  (car elm))
+                    (funcall cadr-pred (cdr elm)))))
+            (member nil)
+            (not))))
+
+;; From compat
+(defun $::list-of-strings-p (object)
+  "Return t if OBJECT is nil or a list of strings."
+  (declare (pure t) (side-effect-free t))
+  (while (and (consp object) (stringp (car object)))
+    (setq object (cdr object)))
+  (null object))
+
+
+
+(defmacro $::manifest-validation (manifest &rest property-cases)
+  (declare (indent 1))
+  (let* ((errors-sym (gensym "errors"))
+         (bindings   nil)
+         (cases*     nil))
+    (dolist (case property-cases)
+      (let* ((property         (nth 0 case))
+             (bind             (nth 1 case))
+             (condition        (nth 2 case))
+             (expected-message (nth 3 case)))
+        (push `(,bind (plist-get ,manifest ,property))
+              bindings)
+        (push `(unless ,condition
+                 (push (list :property ,property
+                             :value ,bind
+                             :expected ,expected-message)
+                       ,errors-sym))
+              cases*)))
+    `(let* ((,errors-sym  nil)
+            ,@bindings)
+       ,@cases*
+       (when ,errors-sym
+         (signal 'manifest-validation-error
+                 (list :invalid-properties ,errors-sym))))))
+
 (defun $::makeinfo (files directory)
   (apply #'$::call-process "makeinfo" directory files)
   (dolist (file ($::directory-files-recursively directory))
@@ -163,16 +226,47 @@
 
 (defun $:validate-manifest (manifest)
   (setq manifest (cdr manifest))
-  (let* ((name    (plist-get manifest :name))
-         (version (plist-get manifest :version)))
-    (when (not (and (symbolp name) (not (null name))))
-      (signal '$:manifest-validation-error
-              (list (cons :property 'package-name)
-                    (cons :value     name))))
-    (when (not (and (stringp version) (not (string-blank-p version))))
-      (signal '$:manifest-validation-error
-              (list (cons :property 'package-version)
-                    (cons :value     version))))))
+  ($::manifest-validation manifest
+    (:name
+     name ($::not-nil-symbol-p name)
+     "Not nil symbol")
+    (:version
+     version ($::version-string-p version)
+     "String of a form that can be understood by `version-to-list'")
+    (:description
+     desc ($::not-blank-string-or-null-p desc)
+     "Not blank string or null")
+    (:dependencies
+     deps ($::list-of-pairs-p deps #'$::not-nil-symbol-p #'$::version-string-p)
+     "List of (not nil symbol - `version-to-list' undestandable string) pairs")
+    (:url
+     url ($::not-blank-string-p url)
+     "String or null")
+    (:authors
+     authors ($::list-of-pairs-p
+              authors #'$::not-blank-string-p #'$::not-blank-string-p)
+     "List of (not blank string - not blank string) pairs")
+    (:license
+     license ($::not-blank-string-or-null-p license)
+     "Not blank string or null")
+    (:src
+     src ($::list-of-strings-p src)
+     "List if strings")
+    (:src-exclude
+     src-ex ($::list-of-strings-p src-ex)
+     "List if strings")
+    (:docs
+     docs ($::list-of-strings-p docs)
+     "List if strings")
+    (:docs-exclude
+     docs-ex ($::list-of-strings-p docs-ex)
+     "List if strings")
+    (:assets
+     assets ($::list-of-strings-p assets)
+     "List if strings")
+    (:assets-exclide
+     assets-ex ($::list-of-strings-p assets-ex)
+     "List if strings")))
 
 (defun $:manifest->define-package (manifest)
   (let* ((name         (plist-get manifest :name))
