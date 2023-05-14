@@ -38,6 +38,7 @@
 
 
 (defun ku-buffer-string ()
+  (declare (side-effect-free t))
   (buffer-substring-no-properties (point-min) (point-max)))
 
 (defun ku-call-process (program directory &rest args)
@@ -60,12 +61,14 @@
     (copy-file file newname)))
 
 (defun ku-directory-files-recursively (file)
+  (declare (side-effect-free t))
   (if (file-directory-p file)
       (directory-files-recursively file directory-files-no-dot-files-regexp
                                    nil nil t)
     (list file)))
 
 (defun ku-temporary-file-directory ()
+  (declare (side-effect-free t))
   (thread-last
     (time-convert nil 'integer)
     (format "temp-%s")
@@ -73,6 +76,7 @@
     (file-name-as-directory)))
 
 (defun ku-expand-files (files directory)
+  (declare (side-effect-free t))
   (let* ((expanded-files (list "")))
     (dolist (file files expanded-files)
       (thread-last
@@ -81,25 +85,30 @@
         (nconc expanded-files)))))
 
 (defun ku-version-string-p (object)
+  (declare (pure t) (side-effect-free t))
   (condition-case _
       (version-to-list object)
     (error nil)))
 
 (defun ku-not-blank-string-p (object)
+  (declare (pure t) (side-effect-free t))
   (or (and (stringp object)
            (not (string-blank-p object)))
       (null object)))
 
 (defun ku-not-blank-string-p* (object)
+  (declare (pure t) (side-effect-free t))
   (and (stringp object)
        (not (string-blank-p object))))
 
 (defun ku-symbolp (object)
+  (declare (pure t) (side-effect-free t))
   (and (symbolp object)
        (not (keywordp object))
        (not (null object))))
 
 (defun ku-list-of-pairs-p (object car-pred cadr-pred)
+  (declare (pure t) (side-effect-free t))
   (while (and (consp object)
               (funcall car-pred (caar object))
               (funcall cadr-pred (cadar object)))
