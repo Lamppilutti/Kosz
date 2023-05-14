@@ -266,7 +266,8 @@
      "List if strings")
     (:assets-exclide
      assets-ex ($::list-of-strings-p assets-ex)
-     "List if strings")))
+     "List if strings"))
+  manifest)
 
 (defun $:manifest->define-package (manifest)
   (let* ((name         (plist-get manifest :name))
