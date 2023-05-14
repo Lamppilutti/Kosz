@@ -94,8 +94,9 @@
            (not (string-blank-p object)))
       (null object)))
 
-(defun ku-not-nil-symbol-p (object)
+(defun ku-symbolp (object)
   (and (symbolp object)
+       (not (keywordp object))
        (not (null object))))
 
 (defun ku-list-of-pairs-p (object car-pred cadr-pred)

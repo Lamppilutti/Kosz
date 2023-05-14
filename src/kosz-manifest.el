@@ -77,7 +77,7 @@
   (setq manifest (cdr manifest))
   (km--manifest-validation manifest
     (:name
-     name (ku-not-nil-symbol-p name)
+     name (ku-symbolp name)
      "Not nil symbol")
     (:version
      version (ku-version-string-p version)
@@ -86,7 +86,7 @@
      desc (ku-not-blank-string-or-null-p desc)
      "Not blank string or null")
     (:dependencies
-     deps (ku-list-of-pairs-p deps #'ku-not-nil-symbol-p #'ku-version-string-p)
+     deps (ku-list-of-pairs-p deps #'ku-symbolp #'ku-version-string-p)
      "List of (not nil symbol - `version-to-list' undestandable string) pairs")
     (:url
      url (ku-not-blank-string-p url)
