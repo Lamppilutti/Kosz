@@ -86,13 +86,13 @@
     (error nil)))
 
 (defun ku-not-blank-string-p (object)
-  (and (stringp object)
-       (not (string-blank-p object))))
-
-(defun ku-not-blank-string-or-null-p (object)
   (or (and (stringp object)
            (not (string-blank-p object)))
       (null object)))
+
+(defun ku-not-blank-string-p* (object)
+  (and (stringp object)
+       (not (string-blank-p object))))
 
 (defun ku-symbolp (object)
   (and (symbolp object)

@@ -83,7 +83,7 @@
      version (ku-version-string-p version)
      "String of a form that can be understood by `version-to-list'")
     (:description
-     desc (ku-not-blank-string-or-null-p desc)
+     desc (ku-not-blank-string-p desc)
      "Not blank string or null")
     (:dependencies
      deps (ku-list-of-pairs-p deps #'ku-symbolp #'ku-version-string-p)
@@ -93,10 +93,10 @@
      "String or null")
     (:authors
      authors (ku-list-of-pairs-p
-              authors #'ku-not-blank-string-p #'ku-not-blank-string-p)
+              authors #'ku-not-blank-string-p* #'ku-not-blank-string-p*)
      "List of (not blank string - not blank string) pairs")
     (:license
-     license (ku-not-blank-string-or-null-p license)
+     license (ku-not-blank-string-p license)
      "Not blank string or null")
     (:src
      src (ku-list-of-strings-p src)
