@@ -99,14 +99,11 @@
        (not (null object))))
 
 (defun ku-list-of-pairs-p (object car-pred cadr-pred)
-  (and (proper-list-p object)
-       (thread-last
-         object
-         (mapcar (lambda (elm)
-                   (and (funcall car-pred  (car elm))
-                        (funcall cadr-pred (cdr elm)))))
-         (member nil)
-         (not))))
+  (while (and (consp object)
+              (funcall car-pred (caar object))
+              (funcall cadr-pred (cadar object)))
+    (setq object (cdr object)))
+  (null object))
 
 ;; From compat-29
 (defun ku-list-of-strings-p (object)
