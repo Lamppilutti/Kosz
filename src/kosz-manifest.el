@@ -74,8 +74,7 @@
 
 
 (defun km-validate-manifest (manifest)
-  (setq manifest (cdr manifest))
-  (km--manifest-validation manifest
+  (km--manifest-validation (cdr manifest)
     (:name
      name (ku-symbolp name)
      "Not nil symbol")
