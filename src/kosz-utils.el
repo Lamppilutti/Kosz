@@ -68,7 +68,7 @@
 (defun ku-temporary-file-directory ()
   (thread-last
     (time-convert nil 'integer)
-    (format "kosz-%s")
+    (format "temp-%s")
     (file-name-concat (temporary-file-directory))
     (file-name-as-directory)))
 
