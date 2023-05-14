@@ -213,17 +213,6 @@
 
 
 
-(defun $:read-manifest (directory)
-  (setq directory (expand-file-name directory))
-  (with-temp-buffer
-    (insert
-     ($::call-process "emacs" directory
-                      "--batch" "--quick"
-                      "--eval" (format "%S" ($::define-package))
-                      "--load" $:manifest-file))
-    (cons (abbreviate-file-name directory)
-          (sexp-at-point))))
-
 (defun $:validate-manifest (manifest)
   (setq manifest (cdr manifest))
   ($::manifest-validation manifest
@@ -268,6 +257,18 @@
      assets-ex ($::list-of-strings-p assets-ex)
      "List if strings"))
   manifest)
+
+(defun $:read-manifest (directory)
+  (setq directory (expand-file-name directory))
+  (with-temp-buffer
+    (insert
+     ($::call-process "emacs" directory
+                      "--batch" "--quick"
+                      "--eval" (format "%S" ($::define-package))
+                      "--load" $:manifest-file))
+    ($:validate-manifest
+     (cons (abbreviate-file-name directory)
+           (sexp-at-point)))))
 
 (defun $:manifest->define-package (manifest)
   (let* ((name         (plist-get manifest :name))
