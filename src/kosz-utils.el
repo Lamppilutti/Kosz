@@ -38,10 +38,17 @@
 
 
 (defun ku-buffer-string ()
+  "Return the content of current buffer as a string without properties."
   (declare (side-effect-free t))
   (buffer-substring-no-properties (point-min) (point-max)))
 
 (defun ku-call-process (program directory &rest args)
+  "Return the result of executing PROGRAM as string.
+
+DIRECTORY is path to the directory in which PROGRAM will executed.
+ARGS are strings passed as command arguments to PROGRAM.
+
+Signal kosz-utils--external-process-error if PROGRAM ends with an error."
   (let* ((default-directory (or directory default-directory))
          (process-exit-code nil))
     (with-temp-buffer
@@ -55,12 +62,18 @@
                       (cons :output    (ku-buffer-string))))))))
 
 (defun ku-copy-file (file newname)
+  "Copy FILE to NEWNAME.
+
+Create directories in NEWNAME path, if they don't exist."
   (let* ((destination (file-name-directory newname)))
     (when (not (file-exists-p destination))
       (make-directory destination t))
     (copy-file file newname)))
 
 (defun ku-directory-files-recursively (file)
+  "Return FILE directory files recursively, or list with FILE if it it is file.
+
+Return list without directories."
   (declare (side-effect-free t))
   (if (file-directory-p file)
       (directory-files-recursively file directory-files-no-dot-files-regexp
@@ -68,6 +81,7 @@
     (list file)))
 
 (defun ku-temporary-file-directory ()
+  "Return (almost) unique temporary file name."
   (declare (side-effect-free t))
   (thread-last
     (time-convert nil 'integer)
@@ -76,6 +90,10 @@
     (file-name-as-directory)))
 
 (defun ku-expand-files (files directory)
+  "Recursively expand FILES relative to DIRECTORY.
+
+If file is directory then recursively get files of this directory whithout
+subdirectories."
   (declare (side-effect-free t))
   (let* ((expanded-files (list "")))
     (dolist (file files expanded-files)
@@ -85,33 +103,42 @@
         (nconc expanded-files)))))
 
 (defun ku-version-string-p (object)
+  "Return t if OBJECT is string that `version-to-list' understood."
   (declare (pure t) (side-effect-free t))
   (condition-case _
       (version-to-list object)
     (error nil)))
 
 (defun ku-not-blank-string-p (object)
+  "Return t if OBJECT is not blank string or nil."
   (declare (pure t) (side-effect-free t))
   (or (and (stringp object)
            (not (string-blank-p object)))
       (null object)))
 
 (defun ku-not-blank-string-p* (object)
+  "Return t if OBJECT is not blank string."
   (declare (pure t) (side-effect-free t))
   (and (stringp object)
        (not (string-blank-p object))))
 
 (defun ku-symbolp (object)
+  "Return t if OBJECT is a symbol, but not nil and not a keyword."
   (declare (pure t) (side-effect-free t))
   (and (symbolp object)
        (not (keywordp object))
        (not (null object))))
 
-(defun ku-list-of-pairs-p (object car-pred cadr-pred)
+(defun ku-list-of-pairs-p (object firstp secondp)
+  "Return t if OBJECT is null or a list of pairs.
+
+Check the first element of pair by FIRSTP, and the second by SECONDP.
+
+The pair is list of two elements, for example (1 2)."
   (declare (pure t) (side-effect-free t))
   (while (and (consp object)
-              (funcall car-pred (caar object))
-              (funcall cadr-pred (cadar object)))
+              (funcall firstp (caar object))
+              (funcall secondp (cadar object)))
     (setq object (cdr object)))
   (null object))
 
