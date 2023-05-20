@@ -66,7 +66,7 @@ Signal kosz-utils--external-process-error if PROGRAM ends with an error."
 
 Create directories in NEWNAME path, if they don't exist."
   (let* ((destination (file-name-directory newname)))
-    (when (not (file-exists-p destination))
+    (unless (file-exists-p destination)
       (make-directory destination t))
     (copy-file file newname)))
 
