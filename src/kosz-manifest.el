@@ -29,7 +29,8 @@
 
 
 
-(defconst km-manifest-file "package.kosz")
+(defconst km-manifest-file "package.kosz"
+  "Manifest file name.")
 
 
 
@@ -39,6 +40,20 @@
 
 
 (defmacro km--manifest-validation (manifest &rest property-cases)
+  "Utility macros for validate MANIFEST.
+
+PROPERTY-CASES is a list of (PROPERTY BIND COND MESSAGE) elements.
+PROPERTY is a keyword property from MANIFEST.
+BIND is a symbol to which property value will bind.
+COND is an expression what returns boolean.
+MESSAGE is a string describes what property value is expected.
+
+If COND returns nil then the property name, value and MESSAGE will collected to
+(:property PROPERTY :value PROPERTYs-value :expected MESSAGE) error form.  If
+after checking all PROPERTY-CASES there is one or more error forms then signal
+kosz-manifest-validation-error.
+
+\(fn MANIFEST (PROPERTY BIND COND MESSAGE)...)"
   (declare (indent 1))
   (let* ((errors-sym (gensym "errors"))
          (bindings   nil)
@@ -64,6 +79,7 @@
                  (list :invalid-properties ,errors-sym))))))
 
 (defun km--define-package ()
+  "Return form by wich will be used for reading 'define-package' form."
   `(defun define-package (name version &rest properties)
      (plist-put properties :name name)
      (plist-put properties :version version)
@@ -74,6 +90,10 @@
 
 
 (defun km-validate-manifest (manifest)
+  "Validate MANIFEST properties.
+
+Return MANIFEST if all properties valid.  Otherwice throw
+kosz-manifest-validation-error."
   (km--manifest-validation (cdr manifest)
     (:name
      name (ku-symbolp name)
@@ -118,6 +138,13 @@
   manifest)
 
 (defun km-read-manifest (directory)
+  "Read manifest from DIRECTORY.
+
+Manifest is (path . plist) cons, where 'path' is path to the directory from
+where the manifest file was readed, and a plist is properties readed from
+the manifest file.
+
+If manifest invalid signal kosz-manifest-validation-error."
   (setq directory (expand-file-name directory))
   (with-temp-buffer
     (insert (ku-call-process "emacs" directory
