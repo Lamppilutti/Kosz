@@ -1,4 +1,4 @@
-;;; kosz-package.el --- functional for work with package.el. -*- lexical-binding: t; -*-
+;;; kosz-build.el --- build packages for default emacs load-flow. -*- lexical-binding: t; -*-
 
 ;; This file is not part of GNU Emacs.
 
@@ -33,23 +33,23 @@
 
 
 
-(defun kp--makeinfo (files directory)
+(defun kb--makeinfo (files directory)
   (apply #'ku-call-process "makeinfo" directory files)
   (dolist (file (ku-directory-files-recursively directory))
     (ku-call-process "install-info" directory file "dir"))
   (ku-directory-files-recursively directory))
 
 
-(defun kp--generate-pkg-file (manifest)
+(defun kb--generate-pkg-file (manifest)
   (setq manifest (cdr manifest))
   (let* ((name      (plist-get manifest :name))
          (file-name (format "%s-pkg.el" name)))
     (with-temp-file file-name
-      (insert (format "%S\n" (kp-manifest->define-package manifest))
+      (insert (format "%S\n" (kb-manifest->define-package manifest))
               ;;; Monolitic line breaks emacs.
               "\n;; Local " "Variables:\n;; no-byte-compile: t\n;; End:"))))
 
-(defun kp--collect-src (manifest)
+(defun kb--collect-src (manifest)
   (let* ((root         (car manifest))
          (manifest*    (cdr manifest))
          (src-includes (thread-first (plist-get manifest* :src)
@@ -61,7 +61,7 @@
                  (equal ".el" (file-name-extension file t)))
         (copy-file file default-directory t)))))
 
-(defun kp--collect-assets (manifest)
+(defun kb--collect-assets (manifest)
   (let* ((root            (car manifest))
          (manifest*       (cdr manifest))
          (assets-includes (thread-first (plist-get manifest* :assets)
@@ -74,7 +74,7 @@
                      (file-name-concat default-directory)
                      (ku-copy-file file))))))
 
-(defun kp--collect-docs (manifest)
+(defun kb--collect-docs (manifest)
   (let* ((root           (car manifest))
          (manifest*      (cdr manifest))
          (docs-includes  (thread-first (plist-get manifest* :docs)
@@ -89,11 +89,11 @@
             (when (or (not (equal ".texi" (file-name-extension file t)))
                       (member file docs-excludes))
               (setq docs-includes (delete file docs-includes))))
-          (dolist (file (kp--makeinfo docs-includes temp-directory))
+          (dolist (file (kb--makeinfo docs-includes temp-directory))
             (rename-file file default-directory)))
       (delete-directory temp-directory t))))
 
-(defun kp-manifest->define-package (manifest)
+(defun kb-manifest->define-package (manifest)
   (let* ((name         (plist-get manifest :name))
          (version      (plist-get manifest :version))
          (description  (plist-get manifest :description))
@@ -114,7 +114,7 @@
           :maintainer maintainer
           :authors    authors)))
 
-(defun kp-build-for-package-el (manifest)
+(defun kb-build-for-package-el (manifest)
   (let* ((root              (car manifest))
          (manifest*         (cdr manifest))
          (package-fullname  (format "%s-%s"
@@ -127,10 +127,10 @@
     (unwind-protect
         (progn
           (make-directory package-directory t)
-          (kp--generate-pkg-file manifest)
-          (kp--collect-src manifest)
-          (kp--collect-assets manifest)
-          (kp--collect-docs manifest)
+          (kb--generate-pkg-file manifest)
+          (kb--collect-src manifest)
+          (kb--collect-assets manifest)
+          (kb--collect-docs manifest)
           (ku-call-process "tar" build-directory
                            "-cf" package-tar-file
                            package-fullname)
@@ -139,12 +139,12 @@
 
 
 
-(provide 'kosz-package)
+(provide 'kosz-build)
 
 ;; Local Variables:
-;; read-symbol-shorthands: (("kp-" . "kosz-package-")
+;; read-symbol-shorthands: (("kb-" . "kosz-build-")
 ;;                          ("km-" . "kosz-manifest-")
 ;;                          ("ku-" . "kosz-utils-"))
 ;; End:
 
-;;; kosz-package.el ends here.
+;;; kosz-build.el ends here.
