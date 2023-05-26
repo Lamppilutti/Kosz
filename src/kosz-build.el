@@ -28,6 +28,8 @@
 (eval-when-compile
   (require 'subr-x))
 
+(require 'pp)
+
 (require 'kosz-manifest)
 (require 'kosz-utils)
 
@@ -45,9 +47,8 @@
   (let* ((name      (plist-get manifest :name))
          (file-name (format "%s-pkg.el" name)))
     (with-temp-file file-name
-      (insert (format "%S\n" (kb-manifest->define-package manifest))
-              ;;; Monolitic line breaks emacs.
-              "\n;; Local " "Variables:\n;; no-byte-compile: t\n;; End:"))))
+      (pp (kb-manifest->define-package manifest) (current-buffer))
+      (insert "\n;; Local Variables:\n;; no-byte-compile: t\n;; End:\n"))))
 
 (defun kb--collect-src (manifest)
   (let* ((root         (car manifest))
