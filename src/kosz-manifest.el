@@ -48,7 +48,7 @@
 (defun km-validate-manifest (manifest)
   "Validate MANIFEST properties.
 
-Return MANIFEST if all base properties valid.  Otherwice throw
+Return MANIFEST if all base properties valid.  Otherwice signal
 kosz-utils-validation-error."
   (ku-plist-validation (cdr manifest)
     (:name

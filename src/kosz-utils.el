@@ -152,7 +152,7 @@ subdirectories."
     (error nil)))
 
 (defun ku-not-blank-string-p (object)
-  "Return t if OBJECT is not blank string or nil."
+  "Return t if OBJECT is nil or not blank string."
   (declare (pure t) (side-effect-free t))
   (or (and (stringp object)
            (not (string-blank-p object)))
@@ -172,7 +172,7 @@ subdirectories."
        (not (null object))))
 
 (defun ku-list-of-pairs-p (object firstp secondp)
-  "Return t if OBJECT is null or a list of pairs.
+  "Return t if OBJECT is nil or a list of pairs.
 
 Check the first element of pair by FIRSTP, and the second by SECONDP.
 
