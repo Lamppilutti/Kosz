@@ -203,6 +203,23 @@ The pair is list of two elements, for example (1 2)."
     (setq object (cdr object)))
   (null object))
 
+(defun ku-pair->cons (pair)
+  "Return cons created from PAIR.
+
+The pair is list of two elements, for example (1 2)."
+  (cons (car pair) (cadr pair)))
+
+(defun ku-pairs->alist (pairs)
+  "Retun alist created from list of PAIRS.
+
+The pair is list of two elements, for example (1 2)."
+  (declare (pure t) (side-effect-free t))
+  (let* ((res nil))
+    (while (consp pairs)
+      (push (cons (caar pairs) (cadar pairs)) res)
+      (pop pairs))
+    (nreverse res)))
+
 
 
 (provide 'kosz-utils)

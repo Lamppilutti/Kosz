@@ -128,8 +128,8 @@
           :url        url
           :commit     commit
           :keywords   keywords
-          :maintainer maintainer
-          :authors    authors)))
+          :maintainer (ku-pair->cons maintainer)
+          :authors    (ku-pairs->alist authors))))
 
 (defun kb-build-for-package-el (manifest)
   (let* ((root              (car manifest))
