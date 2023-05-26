@@ -48,7 +48,7 @@
 (defun km-validate-manifest (manifest)
   "Validate MANIFEST properties.
 
-Return MANIFEST if all properties valid.  Otherwice throw
+Return MANIFEST if all base properties valid.  Otherwice throw
 kosz-utils-validation-error."
   (ku-plist-validation (cdr manifest)
     (:name
@@ -59,38 +59,39 @@ kosz-utils-validation-error."
      "String of a form that can be understood by `version-to-list'")
     (:description
      desc (ku-not-blank-string-p desc)
-     "Not blank string or null")
+     "Not blank string or nil")
     (:dependencies
      deps (ku-list-of-pairs-p deps #'ku-symbolp #'ku-version-string-p)
-     "List of (not nil symbol - `version-to-list' undestandable string) pairs")
+     "List of (not nil symbol - `version-to-list' undestandable string) pairs, \
+or nil")
     (:url
      url (ku-not-blank-string-p url)
-     "String or null")
+     "String or nil")
     (:authors
      authors (ku-list-of-pairs-p
               authors #'ku-not-blank-string-p* #'ku-not-blank-string-p*)
-     "List of (not blank string - not blank string) pairs")
+     "List of (not blank string - not blank string) pairs, or nil")
     (:license
      license (ku-not-blank-string-p license)
-     "Not blank string or null")
+     "Not blank string or nil")
     (:src
      src (ku-list-of-strings-p src)
-     "List if strings")
+     "List of strings or nil")
     (:src-exclude
      src-ex (ku-list-of-strings-p src-ex)
-     "List if strings")
+     "List of strings or nil")
     (:docs
      docs (ku-list-of-strings-p docs)
-     "List if strings")
+     "List of strings or nil")
     (:docs-exclude
      docs-ex (ku-list-of-strings-p docs-ex)
-     "List if strings")
+     "List of strings or nil")
     (:assets
      assets (ku-list-of-strings-p assets)
-     "List if strings")
+     "List if strings or nil")
     (:assets-exclide
      assets-ex (ku-list-of-strings-p assets-ex)
-     "List if strings"))
+     "List if strings or nil"))
   manifest)
 
 (defun km-read-manifest (directory)
