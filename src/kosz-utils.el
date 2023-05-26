@@ -171,6 +171,17 @@ subdirectories."
        (not (keywordp object))
        (not (null object))))
 
+(defun ku-pairp (object firstp secondp)
+  "Return t if OBJECT is nil or pair.
+
+Check the first element of pair by FIRSTP, and the second by SECONDP.
+
+The pair is list of two elements, for example (1 2)."
+  (declare (pure t) (side-effect-free t))
+  (or (null object)
+      (and (funcall firstp (car object))
+           (funcall secondp (cdar object)))))
+
 (defun ku-list-of-pairs-p (object firstp secondp)
   "Return t if OBJECT is nil or a list of pairs.
 

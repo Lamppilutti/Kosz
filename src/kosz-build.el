@@ -41,7 +41,6 @@
     (ku-call-process "install-info" directory file "dir"))
   (ku-directory-files-recursively directory))
 
-
 (defun kb--generate-pkg-file (manifest)
   (setq manifest (cdr manifest))
   (let* ((name      (plist-get manifest :name))
@@ -94,7 +93,24 @@
             (rename-file file default-directory)))
       (delete-directory temp-directory t))))
 
+
+
+(defun kb-validate-manifest-extra-properties (manifest)
+  (ku-plist-validation (cdr manifest)
+    (:commit
+     commit (ku-not-blank-string-p commit)
+     "String or nil")
+    (:keywords
+     keywords (ku-list-of-strings-p keywords)
+     "List of strings or nil")
+    (:maintainer
+     maintainer (ku-pairp
+                 maintainer #'ku-not-blank-string-p* #'ku-not-blank-string-p*)
+     "Cons with not blank string car and not blank string cdr, or nil"))
+  manifest)
+
 (defun kb-manifest->define-package (manifest)
+  (kb-validate-manifest-extra-properties manifest)
   (let* ((name         (plist-get manifest :name))
          (version      (plist-get manifest :version))
          (description  (plist-get manifest :description))
