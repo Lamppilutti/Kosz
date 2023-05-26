@@ -154,9 +154,9 @@ subdirectories."
 (defun ku-not-blank-string-p (object)
   "Return t if OBJECT is nil or not blank string."
   (declare (pure t) (side-effect-free t))
-  (or (and (stringp object)
-           (not (string-blank-p object)))
-      (null object)))
+  (or (null object)
+      (and (stringp object)
+           (not (string-blank-p object)))))
 
 (defun ku-not-blank-string-p* (object)
   "Return t if OBJECT is not blank string."
