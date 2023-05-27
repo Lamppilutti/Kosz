@@ -41,15 +41,13 @@
     (ku-call-process "install-info" directory file "dir"))
   (ku-directory-files-recursively directory))
 
-(defun kb--generate-pkg-file (manifest)
-  (setq manifest (cdr manifest))
-  (let* ((name      (plist-get manifest :name))
-         (file-name (format "%s-pkg.el" name)))
-    (with-temp-file file-name
-      (pp (kb-manifest->define-package manifest) (current-buffer))
+(defun kb--generate-pkg-file (package-name directory form)
+  (let* ((file-name (format "%s-pkg.el" package-name)))
+    (with-temp-file (file-name-concat directory file-name)
+      (pp form (current-buffer))
       (insert "\n;; Local Variables:\n;; no-byte-compile: t\n;; End:\n"))))
 
-(defun kb--collect-src (manifest)
+(defun kb--collect-src (manifest directory)
   (let* ((root         (car manifest))
          (manifest*    (cdr manifest))
          (src-includes (thread-first (plist-get manifest* :src)
@@ -59,9 +57,9 @@
     (dolist (file src-includes)
       (when (and (not (member file src-excludes))
                  (equal ".el" (file-name-extension file t)))
-        (copy-file file default-directory t)))))
+        (copy-file file directory t)))))
 
-(defun kb--collect-assets (manifest)
+(defun kb--collect-assets (manifest directory)
   (let* ((root            (car manifest))
          (manifest*       (cdr manifest))
          (assets-includes (thread-first (plist-get manifest* :assets)
@@ -71,10 +69,10 @@
     (dolist (file assets-includes)
       (when (not (member file assets-excludes))
         (thread-last (file-relative-name file root)
-                     (file-name-concat default-directory)
+                     (file-name-concat directory)
                      (ku-copy-file file))))))
 
-(defun kb--collect-docs (manifest)
+(defun kb--collect-docs (manifest directory)
   (let* ((root           (car manifest))
          (manifest*      (cdr manifest))
          (docs-includes  (thread-first (plist-get manifest* :docs)
@@ -90,7 +88,7 @@
                       (member file docs-excludes))
               (setq docs-includes (delete file docs-includes))))
           (dolist (file (kb--makeinfo docs-includes temp-directory))
-            (rename-file file default-directory)))
+            (rename-file file directory)))
       (delete-directory temp-directory t))))
 
 
@@ -111,6 +109,7 @@
 
 (defun kb-manifest->define-package (manifest)
   (kb-validate-manifest-extra-properties manifest)
+  (setq manifest (cdr manifest))
   (let* ((name         (plist-get manifest :name))
          (version      (plist-get manifest :version))
          (description  (plist-get manifest :description))
@@ -134,20 +133,22 @@
 (defun kb-build-for-package-el (manifest)
   (let* ((root              (car manifest))
          (manifest*         (cdr manifest))
-         (package-fullname  (format "%s-%s"
-                                    (plist-get manifest* :name)
-                                    (plist-get manifest* :version)))
+         (define-package    (kb-manifest->define-package manifest))
+         (package-name      (plist-get manifest* :name))
+         (package-version   (plist-get manifest* :version))
+         (package-fullname  (format "%s-%s" package-name package-version))
          (package-tar-file  (format "%s.tar" package-fullname))
          (build-directory   (file-name-concat root "build"))
-         (package-directory (file-name-concat build-directory package-fullname))
-         (default-directory (file-name-as-directory package-directory)))
+         (package-directory (thread-last package-fullname
+                                         (file-name-concat build-directory)
+                                         (file-name-as-directory))))
     (unwind-protect
         (progn
           (make-directory package-directory t)
-          (kb--generate-pkg-file manifest)
-          (kb--collect-src manifest)
-          (kb--collect-assets manifest)
-          (kb--collect-docs manifest)
+          (kb--generate-pkg-file package-name package-directory define-package)
+          (kb--collect-src manifest package-directory)
+          (kb--collect-assets manifest package-directory)
+          (kb--collect-docs manifest package-directory)
           (ku-call-process "tar" build-directory
                            "-cf" package-tar-file
                            package-fullname)
