@@ -130,7 +130,7 @@
           :maintainer (ku-pair->cons maintainer)
           :authors    (ku-pairs->alist authors))))
 
-(defun kb-build-for-package-el (manifest)
+(defun kb-build (manifest)
   (let* ((root              (car manifest))
          (manifest*         (cdr manifest))
          (define-package    (kb-manifest->define-package manifest))
