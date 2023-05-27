@@ -204,10 +204,12 @@ The pair is list of two elements, for example (1 2)."
   (null object))
 
 (defun ku-pair->cons (pair)
-  "Return cons created from PAIR.
+  "Return cons created from PAIR.  If PAIR is nil return nil.
 
 The pair is list of two elements, for example (1 2)."
-  (cons (car pair) (cadr pair)))
+  (if (null pair)
+      nil
+    (cons (car pair) (cadr pair))))
 
 (defun ku-pairs->alist (pairs)
   "Retun alist created from list of PAIRS.
