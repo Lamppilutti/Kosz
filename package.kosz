@@ -1,0 +1,14 @@
+;;; -*- mode: emacs-lisp; lexical-binding: t; -*-
+
+
+
+(define-package 'kosz "0.9.0"
+  :description  "Emacs package builder."
+  :dependencies '((emacs "28"))
+
+  :url     "https://sr.ht/~lamppilutti/Kosz/"
+  :authors '(("Lämppi Lütti" "lamppilutti@gmail.com"))
+
+  :src    '("src/")
+  :docs   '("docs/info/")
+  :assets '("README"))
