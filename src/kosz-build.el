@@ -36,18 +36,23 @@
 
 
 (defun kb--makeinfo (files directory)
+  "Build .info and 'dir' files from .texi FILES inside DIRECTORY."
   (apply #'ku-call-process "makeinfo" directory files)
   (dolist (file (ku-directory-files-recursively directory))
     (ku-call-process "install-info" directory file "dir"))
   (ku-directory-files-recursively directory))
 
 (defun kb--generate-pkg-file (package-name directory form)
+  "Generate pkg file for PACKAGE-NAME from define package FORM inside DIRECTORY."
   (let* ((file-name (format "%s-pkg.el" package-name)))
     (with-temp-file (file-name-concat directory file-name)
       (pp form (current-buffer))
       (insert "\n;; Local Variables:\n;; no-byte-compile: t\n;; End:\n"))))
 
 (defun kb--collect-src (manifest directory)
+  "Copy package source code files to DIRECTORY.
+
+Use MANIFEST for getting information about source code files."
   (let* ((root         (car manifest))
          (manifest*    (cdr manifest))
          (src-includes (thread-first (plist-get manifest* :src)
@@ -60,6 +65,9 @@
         (copy-file file directory t)))))
 
 (defun kb--collect-assets (manifest directory)
+  "Copy package assets files to DIRECTORY.
+
+Use MANIFEST for getting information about assets files."
   (let* ((root            (car manifest))
          (manifest*       (cdr manifest))
          (assets-includes (thread-first (plist-get manifest* :assets)
@@ -73,6 +81,9 @@
                      (ku-copy-file file))))))
 
 (defun kb--collect-docs (manifest directory)
+  "Compile package documentation (.texi) files to DIRECTORY.
+
+Use MANIFEST for getting information about documentation files."
   (let* ((root           (car manifest))
          (manifest*      (cdr manifest))
          (docs-includes  (thread-first (plist-get manifest* :docs)
@@ -94,6 +105,10 @@
 
 
 (defun kb-validate-manifest-extra-properties (manifest)
+  "Validate MANIFESTs properties which make sense for package.el.
+
+Return MANIFEST if extra properties are valid.  Otherwice signal
+kosz-utils-validation-error."
   (ku-plist-validation (cdr manifest)
     (:commit
      commit (ku-not-blank-string-p commit)
@@ -108,6 +123,10 @@
   manifest)
 
 (defun kb-manifest->define-package (manifest)
+  "Return 'define-package' form generated from MANIFEST.
+
+If MANIFEST extra properties are invalid signal kosz-utils-validation-error.
+Skip properties what have no use for 'package.el'."
   (kb-validate-manifest-extra-properties manifest)
   (setq manifest (cdr manifest))
   (let* ((name         (plist-get manifest :name))
@@ -131,6 +150,7 @@
           :authors    (ku-pairs->alist authors))))
 
 (defun kb-build (manifest)
+  "Build package tar file that 'package.el' understood from MANIFEST."
   (let* ((root              (car manifest))
          (manifest*         (cdr manifest))
          (define-package    (kb-manifest->define-package manifest))
