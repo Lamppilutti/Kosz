@@ -7,8 +7,9 @@
   :dependencies '((emacs "28"))
 
   :url     "https://sr.ht/~lamppilutti/Kosz/"
+  :license "GNU GPL 3.0"
   :authors '(("Lämppi Lütti" "lamppilutti@gmail.com"))
 
   :src    '("src/")
   :docs   '("docs/info/")
-  :assets '("README"))
+  :assets '("README" "COPYING"))
