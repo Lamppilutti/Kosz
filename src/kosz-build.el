@@ -104,30 +104,11 @@ Use MANIFEST for getting information about documentation files."
 
 
 
-(defun kb-validate-manifest-extra-properties (manifest)
-  "Validate MANIFESTs properties which make sense for package.el.
-
-Return MANIFEST if extra properties are valid.  Otherwice signal
-kosz-utils-validation-error."
-  (ku-plist-validation (cdr manifest)
-    (:commit
-     commit (ku-not-blank-string-p commit)
-     "String or nil")
-    (:keywords
-     keywords (ku-list-of-strings-p keywords)
-     "List of strings or nil")
-    (:maintainer
-     maintainer (ku-pairp
-                 maintainer #'ku-not-blank-string-p* #'ku-not-blank-string-p*)
-     "Cons with not blank string car and not blank string cdr, or nil"))
-  manifest)
-
 (defun kb-manifest->define-package (manifest)
   "Return 'define-package' form generated from MANIFEST.
 
 If MANIFEST extra properties are invalid signal kosz-utils-validation-error.
 Skip properties what have no use for 'package.el'."
-  (kb-validate-manifest-extra-properties manifest)
   (setq manifest (cdr manifest))
   (let* ((name         (plist-get manifest :name))
          (version      (plist-get manifest :version))
