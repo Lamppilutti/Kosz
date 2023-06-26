@@ -34,14 +34,24 @@
 
 
 
-(defun km--define-package ()
-  "Return form by wich will be used for reading 'define-package' form."
-  `(defun define-package (name version &rest properties)
-     (plist-put properties :name name)
-     (plist-put properties :version version)
-     (prin1 properties)
-     (setq kill-emacs-hook nil)
-     (kill-emacs)))
+(defun km--init-emacs ()
+  "Return code for initialazing Emacs.
+
+It defines \\='define-package' form and makes shure that result of
+\\='define-package' form will be printed at the same end of Emacs work.
+
+This code should be evaluated before any \\='load'."
+  `(progn
+     (defvar _define_package_result)
+     (advice-add 'load :after
+                 (lambda (&rest _)
+                   (setq kill-emacs-hook nil)
+                   (prin1 _define_package_result)
+                   (kill-emacs)))
+     (defun define-package (name version &rest properties)
+       (plist-put properties :name name)
+       (plist-put properties :version version)
+       (setq _define_package_result properties))))
 
 
 
@@ -107,8 +117,8 @@ or nil")
 (defun km-read-manifest (directory)
   "Read manifest from DIRECTORY.
 
-Manifest is (path . plist) cons, where 'path' is path to the directory from
-where the manifest file was readed, and a plist is properties readed from
+Manifest is (path . plist) cons, where \\='path' is path to the directory from
+where the manifest file was readed, and a \\='plist' is properties readed from
 the manifest file.
 
 If manifest invalid signal kosz-manifest-validation-error."
@@ -116,7 +126,7 @@ If manifest invalid signal kosz-manifest-validation-error."
   (with-temp-buffer
     (insert (ku-call-process "emacs" directory
                              "--batch" "--quick"
-                             "--eval" (format "%S" (km--define-package))
+                             "--eval" (format "%S" (km--init-emacs))
                              "--load" km-manifest-file))
     (km-validate-manifest
      (cons (abbreviate-file-name directory)
