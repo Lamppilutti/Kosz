@@ -36,7 +36,7 @@
 
 
 (defun kb--makeinfo (files directory)
-  "Build .info and 'dir' files from .texi FILES inside DIRECTORY."
+  "Build .info and \\='dir' files from .texi FILES inside DIRECTORY."
   (apply #'ku-call-process "makeinfo" directory files)
   (dolist (file (ku-directory-files-recursively directory))
     (ku-call-process "install-info" directory file "dir"))
@@ -105,10 +105,10 @@ Use MANIFEST for getting information about documentation files."
 
 
 (defun kb-manifest->define-package (manifest)
-  "Return 'define-package' form generated from MANIFEST.
+  "Return \\='define-package' form generated from MANIFEST.
 
 If MANIFEST extra properties are invalid signal kosz-utils-validation-error.
-Skip properties what have no use for 'package.el'."
+Skip properties what have no use for \\='package.el'."
   (setq manifest (cdr manifest))
   (let* ((name         (plist-get manifest :name))
          (version      (plist-get manifest :version))
@@ -131,7 +131,7 @@ Skip properties what have no use for 'package.el'."
           :authors    (ku-pairs->alist authors))))
 
 (defun kb-build (manifest)
-  "Build package tar file that 'package.el' understood from MANIFEST."
+  "Build package tar file that \\='package.el' understood from MANIFEST."
   (let* ((root              (car manifest))
          (manifest*         (cdr manifest))
          (define-package    (kb-manifest->define-package manifest))
