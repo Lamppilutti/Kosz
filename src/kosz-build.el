@@ -1,4 +1,4 @@
-;;; kosz-build.el --- build packages for default emacs load-flow. -*- lexical-binding: t; -*-
+;;; kosz-build.el --- build packages for Emacs `load' mechanism. -*- lexical-binding: t; -*-
 
 ;; This file is not part of GNU Emacs.
 
@@ -35,22 +35,26 @@
 
 
 
-(defun kb--makeinfo (files directory)
-  "Build .info and \\='dir' files from .texi FILES inside DIRECTORY."
+(defun kb--makeinfo(files directory)
+  "Build \\='.info' and \\='dir' files from \\='.texi' FILES inside DIRECTORY.
+
+Return list of created files."
   (apply #'ku-call-process "makeinfo" directory files)
   (dolist (file (ku-directory-files-recursively directory))
     (ku-call-process "install-info" directory file "dir"))
   (ku-directory-files-recursively directory))
 
-(defun kb--generate-pkg-file (package-name directory form)
-  "Generate pkg file for PACKAGE-NAME from define package FORM inside DIRECTORY."
-  (let* ((file-name (format "%s-pkg.el" package-name)))
+(defun kb--generate-pkg-file (manifest directory)
+  "Generate \\='-pkg.el' file from MANIFEST inside DIRECTORY."
+  (let* ((manifest*           (cdr manifest))
+         (define-package-form (kb-manifest->define-package manifest))
+         (file-name           (format "%s-pkg.el" (plist-get manifest* :name))))
     (with-temp-file (file-name-concat directory file-name)
-      (pp form (current-buffer))
+      (pp define-package-form (current-buffer))
       (insert "\n;; Local Variables:\n;; no-byte-compile: t\n;; End:\n"))))
 
 (defun kb--collect-src (manifest directory)
-  "Copy package source code files to DIRECTORY.
+  "Copy package's source code files to DIRECTORY.
 
 Use MANIFEST for getting information about source code files."
   (let* ((root         (car manifest))
@@ -81,7 +85,7 @@ Use MANIFEST for getting information about assets files."
                      (ku-copy-file file))))))
 
 (defun kb--collect-docs (manifest directory)
-  "Compile package documentation (.texi) files to DIRECTORY.
+  "Compile package \\='.texi' documentation files to DIRECTORY.
 
 Use MANIFEST for getting information about documentation files."
   (let* ((root           (car manifest))
@@ -107,7 +111,7 @@ Use MANIFEST for getting information about documentation files."
 (defun kb-manifest->define-package (manifest)
   "Return \\='define-package' form generated from MANIFEST.
 
-If MANIFEST extra properties are invalid signal kosz-utils-validation-error.
+If MANIFEST extra properties are invalid signal `kosz-utils-validation-error'.
 Skip properties what have no use for \\='package.el'."
   (setq manifest (cdr manifest))
   (let* ((name         (plist-get manifest :name))
@@ -131,10 +135,11 @@ Skip properties what have no use for \\='package.el'."
           :authors    (ku-pairs->alist authors))))
 
 (defun kb-build (manifest)
-  "Build package tar file that \\='package.el' understood from MANIFEST."
+  "Build package tar file from MANIFEST that \\='package.el' understood.
+
+The tar file contains directory what can be used in `load-path'."
   (let* ((root              (car manifest))
          (manifest*         (cdr manifest))
-         (define-package    (kb-manifest->define-package manifest))
          (package-name      (plist-get manifest* :name))
          (package-version   (plist-get manifest* :version))
          (package-fullname  (format "%s-%s" package-name package-version))
@@ -142,11 +147,12 @@ Skip properties what have no use for \\='package.el'."
          (build-directory   (file-name-concat root "build"))
          (package-directory (thread-last package-fullname
                                          (file-name-concat build-directory)
+                                         ;; For correct file moving.
                                          (file-name-as-directory))))
     (unwind-protect
         (progn
           (make-directory package-directory t)
-          (kb--generate-pkg-file package-name package-directory define-package)
+          (kb--generate-pkg-file manifest package-directory)
           (kb--collect-src manifest package-directory)
           (kb--collect-assets manifest package-directory)
           (kb--collect-docs manifest package-directory)
