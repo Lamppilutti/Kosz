@@ -32,7 +32,6 @@
 (require 'project)
 
 (require 'kosz-manifest)
-(require 'kosz-build)
 
 
 
@@ -41,7 +40,7 @@
     (cond
      ((null dir) nil)
      ((file-exists-p (expand-file-name km-manifest-file dir)) (cons 'kosz dir))
-     (t (find-project (kosz-utils-file-name-parent-directory dir))))))
+     (t (find-project (file-name-parent-directory dir))))))
 
 
 
@@ -62,8 +61,7 @@
 
 ;; Local Variables:
 ;; read-symbol-shorthands: (("kip-" . "kosz-integrations-project-")
-;;                          ("km-"  . "kosz-manifest-")
-;;                          ("ku-"  . "kosz-utils-"))
+;;                          ("km-"  . "kosz-manifest-"))
 ;; End:
 
 ;;; kosz-integrations-project.el ends here.
