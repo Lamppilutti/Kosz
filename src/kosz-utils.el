@@ -21,7 +21,7 @@
 
 ;;; Commentary:
 
-;; Additional subroutines what can be used separately from Kosz.
+;; Subroutines what could have been in Emacs, but they are not.
 
 ;;; Code:
 
@@ -50,11 +50,11 @@ COND is an expression what returns boolean.
 MESSAGE is a string describes what property value is expected.
 
 If COND returns nil then the property name, value and MESSAGE will collected to
-(:property PROPERTY :value PROPERTYs-value :expected MESSAGE) error form.  If
+(:property PROPERTY :value PROPERTY's-value :expected MESSAGE) error form.  If
 after checking all PROPERTY-CASES there is one or more error forms then signal
-kosz-utils-validation-error.
+`kosz-utils-validation-error'.
 
-\(fn MANIFEST (PROPERTY BIND COND MESSAGE)...)"
+\(fn PLIST (PROPERTY BIND COND MESSAGE)...)"
   (declare (indent 1))
   (let* ((errors-sym (gensym "errors"))
          (bindings   nil)
@@ -90,7 +90,7 @@ kosz-utils-validation-error.
 DIRECTORY is path to the directory in which PROGRAM will executed.
 ARGS are strings passed as command arguments to PROGRAM.
 
-Signal kosz-utils--external-process-error if PROGRAM ends with an error."
+Signal `kosz-utils--external-process-error' if PROGRAM ends with an error."
   (let* ((default-directory (or directory default-directory))
          (process-exit-code nil))
     (with-temp-buffer
@@ -108,14 +108,14 @@ Signal kosz-utils--external-process-error if PROGRAM ends with an error."
 
 Create directories in NEWNAME path, if they don't exist."
   (let* ((destination (file-name-directory newname)))
-    (unless (file-exists-p destination)
-      (make-directory destination t))
+    (make-directory destination t)
     (copy-file file newname)))
 
 (defun ku-directory-files-recursively (file)
-  "Return FILE directory files recursively, or list with FILE if it it is file.
+  "Return list of files.
 
-Return list without directories."
+If FILE is directory return its contant recursively. Otherwice if FILE is
+actially file return (FILE) list."
   (declare (side-effect-free t))
   (if (file-directory-p file)
       (directory-files-recursively file directory-files-no-dot-files-regexp
@@ -134,8 +134,7 @@ Return list without directories."
 (defun ku-expand-files (files directory)
   "Recursively expand FILES relative to DIRECTORY.
 
-If file is directory then recursively get files of this directory whithout
-subdirectories."
+If file is directory then recursively get files of it whithout subdirectories."
   (declare (side-effect-free t))
   (let* ((expanded-files (list "")))
     (dolist (file files expanded-files)
