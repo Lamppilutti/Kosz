@@ -195,14 +195,6 @@ The pair is list of two elements, for example (1 2)."
     (setq object (cdr object)))
   (null object))
 
-;; From compat-29
-(defun ku-list-of-strings-p (object)
-  "Return t if OBJECT is nil or a list of strings."
-  (declare (pure t) (side-effect-free t))
-  (while (and (consp object) (stringp (car object)))
-    (setq object (cdr object)))
-  (null object))
-
 (defun ku-pair->cons (pair)
   "Return cons created from PAIR.  If PAIR is nil return nil.
 

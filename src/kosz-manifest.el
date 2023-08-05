@@ -88,7 +88,7 @@ or nil")
      commit (ku-not-blank-string-p commit)
      "String or nil")
     (:keywords
-     keywords (ku-list-of-strings-p keywords)
+     keywords (list-of-strings-p keywords)
      "List of strings or nil")
     (:maintainer
      maintainer (ku-pairp
@@ -98,22 +98,22 @@ or nil")
      readme (ku-not-blank-string-p readme)
      "Not blank string or nil")
     (:src
-     src (ku-list-of-strings-p src)
+     src (list-of-strings-p src)
      "List of strings or nil")
     (:src-exclude
-     src-ex (ku-list-of-strings-p src-ex)
+     src-ex (list-of-strings-p src-ex)
      "List of strings or nil")
     (:docs
-     docs (ku-list-of-strings-p docs)
+     docs (list-of-strings-p docs)
      "List of strings or nil")
     (:docs-exclude
-     docs-ex (ku-list-of-strings-p docs-ex)
+     docs-ex (list-of-strings-p docs-ex)
      "List of strings or nil")
     (:assets
-     assets (ku-list-of-strings-p assets)
+     assets (list-of-strings-p assets)
      "List if strings or nil")
     (:assets-exclide
-     assets-ex (ku-list-of-strings-p assets-ex)
+     assets-ex (list-of-strings-p assets-ex)
      "List of strings or nil"))
   manifest)
 
