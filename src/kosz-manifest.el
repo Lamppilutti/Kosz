@@ -59,7 +59,7 @@ This code should be evaluated before any \\='load'."
   "Validate MANIFEST properties.
 
 Return MANIFEST if all base properties valid.  Otherwice signal
-kosz-utils-validation-error."
+`kosz-utils-validation-error'."
   (ku-plist-validation (cdr manifest)
     (:name
      name (ku-symbolp name)
@@ -117,11 +117,11 @@ or nil")
 (defun km-read-manifest (directory)
   "Read manifest from DIRECTORY.
 
-Manifest is (path . plist) cons, where \\='path' is path to the directory from
-where the manifest file was readed, and a \\='plist' is properties readed from
+Manifest is (PATH . PLIST) cons, where PATH is path to the directory from
+where the manifest file was readed, and a PLIST is properties readed from
 the manifest file.
 
-If manifest invalid signal kosz-manifest-validation-error."
+If manifest invalid signal `kosz-manifest-validation-error'."
   (setq directory (expand-file-name directory))
   (with-temp-buffer
     (insert (ku-call-process "emacs" directory
