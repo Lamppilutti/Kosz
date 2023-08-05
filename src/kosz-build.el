@@ -50,7 +50,7 @@ Return list of created files."
          (define-package-form (kb-manifest->define-package manifest))
          (file-name           (format "%s-pkg.el" (plist-get manifest* :name))))
     (with-temp-file (file-name-concat directory file-name)
-      (pp define-package-form (current-buffer))
+      (pp-emacs-lisp-code define-package-form)
       (insert "\n;; Local Variables:\n;; no-byte-compile: t\n;; End:\n"))))
 
 (defun kb--collect-src (manifest directory)
