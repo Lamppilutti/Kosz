@@ -4,7 +4,7 @@
 
 (define-package 'kosz "0.9.0"
   :description  "Emacs package builder."
-  :dependencies '((emacs "28"))
+  :dependencies '((emacs "29.1"))
 
   :url     "https://sr.ht/~lamppilutti/Kosz/"
   :license "GNU GPL 3.0"
