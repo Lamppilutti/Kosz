@@ -106,6 +106,12 @@ Use MANIFEST for getting information about documentation files."
             (rename-file file directory)))
       (delete-directory temp-directory t))))
 
+(defun kb--collect-readme (manifest directory)
+  (let* ((root        (car manifest))
+         (manifest*   (cdr manifest))
+         (readme-file (expand-file-name (plist-get manifest* :readme) root)))
+    (copy-file readme-file (file-name-concat directory "README") t)))
+
 
 
 (defun kb-manifest->define-package (manifest)
@@ -156,6 +162,7 @@ The tar file contains directory what can be used in `load-path'."
           (kb--collect-src manifest package-directory)
           (kb--collect-assets manifest package-directory)
           (kb--collect-docs manifest package-directory)
+          (kb--collect-readme manifest package-directory)
           (ku-call-process "tar" build-directory
                            "-cf" package-tar-file
                            package-fullname)

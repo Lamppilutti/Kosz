@@ -84,6 +84,19 @@ or nil")
     (:license
      license (ku-not-blank-string-p license)
      "Not blank string or nil")
+    (:commit
+     commit (ku-not-blank-string-p commit)
+     "String or nil")
+    (:keywords
+     keywords (ku-list-of-strings-p keywords)
+     "List of strings or nil")
+    (:maintainer
+     maintainer (ku-pairp
+                 maintainer #'ku-not-blank-string-p* #'ku-not-blank-string-p*)
+     "Pair of not blank strings or nil")
+    (:readme
+     readme (ku-not-blank-string-p readme)
+     "Not blank string or nil")
     (:src
      src (ku-list-of-strings-p src)
      "List of strings or nil")
@@ -101,17 +114,7 @@ or nil")
      "List if strings or nil")
     (:assets-exclide
      assets-ex (ku-list-of-strings-p assets-ex)
-     "List if strings or nil")
-    (:commit
-     commit (ku-not-blank-string-p commit)
-     "String or nil")
-    (:keywords
-     keywords (ku-list-of-strings-p keywords)
-     "List of strings or nil")
-    (:maintainer
-     maintainer (ku-pairp
-                 maintainer #'ku-not-blank-string-p* #'ku-not-blank-string-p*)
-     "Pair of not blank strings or nil"))
+     "List of strings or nil"))
   manifest)
 
 (defun km-read-manifest (directory)

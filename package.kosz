@@ -10,6 +10,7 @@
   :license "GNU GPL 3.0"
   :authors '(("Lämppi Lütti" "lamppilutti@gmail.com"))
 
+  :readme "README"
   :src    '("src/")
   :docs   '("docs/info/")
-  :assets '("README" "COPYING"))
+  :assets '("COPYING"))
