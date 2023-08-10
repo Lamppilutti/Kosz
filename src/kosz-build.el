@@ -1,4 +1,4 @@
-;;; kosz-build.el --- build packages for Emacs `load' mechanism. -*- lexical-binding: t; -*-
+;;; kosz-build.el --- -*- lexical-binding: t; -*-
 
 ;; This file is not part of GNU Emacs.
 
@@ -20,6 +20,8 @@
 ;; along with Kosz.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
+;; Programming and user interfaces for building packages.  Resulted packages can
+;; be loaded by adding to `load-path' or registered by "packege.el".
 
 ;;; Code:
 
@@ -28,7 +30,9 @@
 (eval-when-compile
   (require 'subr-x))
 
+(require 'package)
 (require 'pp)
+(require 'project)
 
 (require 'kosz-manifest)
 (require 'kosz-utils)
@@ -168,6 +172,26 @@ The tar file contains directory what can be used in `load-path'."
                            package-fullname)
           (expand-file-name package-tar-file build-directory))
       (delete-directory package-directory t))))
+
+
+
+;;;###autoload
+(defun kosz-build-current-package ()
+  (declare (interactive-only t))
+  (interactive)
+  (thread-last
+    (project-current)
+    (project-root)
+    (km-read-manifest)
+    (kb-build)))
+
+;;;###autoload
+(defun kosz-build-and-install-current-package ()
+  (declare (interactive-only t))
+  (interactive)
+  (thread-last
+    (call-interactively #'kosz-build-current-package)
+    (package-install-file)))
 
 
 
