@@ -33,6 +33,7 @@
 (require 'package)
 (require 'pp)
 (require 'project)
+(require 'vc)
 
 (require 'kosz-manifest)
 (require 'kosz-utils)
@@ -189,6 +190,47 @@ The tar file contains directory what can be used in `load-path'."
   (thread-last
     (call-interactively #'kosz-build-current-package)
     (package-install-file)))
+
+;;;###autoload
+(defun kosz-build-vc-package ()
+  "Load package by vc and build it.
+
+Ask package repository URL, DIRECTORY to place builded package, VCS for use and
+REVISION of repository.  Revision can be empty."
+  (declare (interactive-only t))
+  (interactive)
+  (let* ((temp-dir  (ku-temporary-file-directory))
+         (remote    (read-string "Repository URL: "))
+         (directory (read-directory-name "Diestination: "))
+         (backend   (intern
+                     (completing-read "VCR: " vc-handled-backends)))
+         (revision* (read-string "Revision: "))
+         (revision  (if (equal "" revision*) nil revision*)))
+    (thread-first
+      (vc-clone remote backend temp-dir revision)
+      (km-read-manifest)
+      (kb-build)
+      (rename-file directory))))
+
+;;;###autoload
+(defun kosz-build-and-install-vc-package ()
+  "Load package by vc and install it by package.el.
+
+Ask package repository URL, VCS for use and REVISION of repository.
+REVISION can be empty."
+  (declare (interactive-only t))
+  (interactive)
+  (let* ((temp-dir (ku-temporary-file-directory))
+         (remote   (read-string "Install from: "))
+         (backend  (intern
+                    (completing-read "Use backend: " vc-handled-backends)))
+         (revision* (read-string "Revision: "))
+         (revision  (if (equal "" revision*) nil revision*)))
+    (thread-first
+      (vc-clone remote backend temp-dir revision)
+      (km-read-manifest)
+      (kb-build)
+      (package-install-file))))
 
 
 
