@@ -99,16 +99,13 @@ Use MANIFEST for getting information about documentation files."
          (docs-excludes  (thread-first (plist-get manifest* :docs-exclude)
                                        (ku-expand-files root)))
          (temp-directory (ku-temporary-file-directory)))
-    (unwind-protect
-        (progn
-          (make-directory temp-directory t)
-          (dolist (file docs-includes)
-            (when (or (not (equal ".texi" (file-name-extension file t)))
-                      (member file docs-excludes))
-              (setq docs-includes (delete file docs-includes))))
-          (dolist (file (kb--makeinfo docs-includes temp-directory))
-            (rename-file file directory)))
-      (delete-directory temp-directory t))))
+    (make-directory temp-directory t)
+    (dolist (file docs-includes)
+      (when (or (not (equal ".texi" (file-name-extension file t)))
+                (member file docs-excludes))
+        (setq docs-includes (delete file docs-includes))))
+    (dolist (file (kb--makeinfo docs-includes temp-directory))
+      (rename-file file directory))))
 
 (defun kb--collect-readme (manifest directory)
   (let* ((root        (car manifest))
