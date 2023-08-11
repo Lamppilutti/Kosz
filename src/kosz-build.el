@@ -174,21 +174,29 @@ The tar file contains directory what can be used in `load-path'."
 
 
 ;;;###autoload
-(defun kosz-build-current-package ()
+(defun kosz-build-package ()
+  "Build selected package.
+
+Ask directory of package for build.  Resulted package will be placed in
+\\='package-root/build' directory."
   (declare (interactive-only t))
   (interactive)
-  (thread-last
-    (project-current)
-    (project-root)
-    (km-read-manifest)
-    (kb-build)))
+  (let* ((default-directory (read-directory-name "Package directory :")))
+    (thread-last
+      (project-current)
+      (project-root)
+      (km-read-manifest)
+      (kb-build))))
 
 ;;;###autoload
-(defun kosz-build-and-install-current-package ()
+(defun kosz-build-and-install-package ()
+  "Build and install selected package.
+
+Ask directory of package for install."
   (declare (interactive-only t))
   (interactive)
   (thread-last
-    (call-interactively #'kosz-build-current-package)
+    (call-interactively #'kosz-build-package)
     (package-install-file)))
 
 ;;;###autoload
