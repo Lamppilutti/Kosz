@@ -13,4 +13,7 @@
   :readme "README"
   :src    '("src/")
   :docs   '("docs/info/")
-  :assets '("COPYING"))
+  :assets '("COPYING")
+
+  :tests       '("test/")
+  :test-runner #'ert-run-tests-batch-and-exit)
