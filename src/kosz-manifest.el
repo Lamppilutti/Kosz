@@ -1,4 +1,4 @@
-;;; kosz-manifest.el --- manifest manipulation functions. -*- lexical-binding: t; -*-
+;;; kosz-manifest.el --- -*- lexical-binding: t; -*-
 
 ;; This file is not part of GNU Emacs.
 
@@ -19,7 +19,8 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with Kosz.  If not, see <https://www.gnu.org/licenses/>.
 
-;;; Commentary:
+;;; Commentary
+;; Programming interface for work with manifest file.
 
 ;;; Code:
 
@@ -114,7 +115,15 @@ or nil")
      "List if strings or nil")
     (:assets-exclide
      assets-ex (list-of-strings-p assets-ex)
-     "List of strings or nil"))
+     "List of strings or nil")
+    (:tests
+     tests (list-of-strings-p tests)
+     "List of strings or nil")
+    (:tests-exclude
+     tests-ex (list-of-strings-p tests)
+     "List of strings or nil")
+    (:test-runner
+     test-runner (ku-functionp test-runner)))
   manifest)
 
 (defun km-read-manifest (directory)

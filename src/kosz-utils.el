@@ -1,4 +1,4 @@
-;;; kosz-utils.el --- utils subroutines. -*- lexical-binding: t; -*-
+;;; kosz-utils.el ---  -*- lexical-binding: t; -*-
 
 ;; This file is not part of GNU Emacs.
 
@@ -193,6 +193,12 @@ The pair is list of two elements, for example (1 2)."
               (funcall secondp (cadar object)))
     (setq object (cdr object)))
   (null object))
+
+(defun ku-functionp (object)
+  "Return t if OBJECT is nil or function."
+  (declare (pure t) (side-effect-free t))
+  (or (null object)
+      (functionp object)))
 
 (defun ku-pair->cons (pair)
   "Return cons created from PAIR.  If PAIR is nil return nil.
