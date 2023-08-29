@@ -37,17 +37,26 @@
 
 
 
+(defun kt--ensure-deps (manifest)
+  "Ensure all of the dependencies from MANIFEST are installed."
+  (setq manifest (cdr manifest))
+  (dolist (dependency (plist-get manifest :dependencies))
+    (when-let* ((dependency* (car dependency))
+                (min-version (version-to-list (cadr dependency)))
+                (t* (not (package-installed-p dependency* min-version))))
+      (package-install dependency*))))
+
 (defun kt--collect-tests (manifest)
-  "Return list of tests files.
+  "Return list of test files.
 
 Use MANIFEST for getting information about test files."
   (let* ((root           (car manifest))
          (manifest*      (cdr manifest))
          (tests-includes (thread-first (plist-get manifest* :tests)
-                                      (ku-expand-files root)))
+                                       (ku-expand-files root)))
          (tests-excludes (thread-first (plist-get manifest* :tests-exclude)
-                                      (ku-expand-files root)))
-         (files         nil))
+                                       (ku-expand-files root)))
+         (files          nil))
     (dolist (file tests-includes files)
       (when (and (not (member file tests-excludes))
                  (equal ".el" (file-name-extension file t)))
@@ -90,24 +99,42 @@ If process ends with error return error message as result."
       (ku-external-process-error
        (alist-get :output process-error)))))
 
+(defun kt--load-path ()
+  "Construct the `load-path' for project.
+Load path is based on all of the packages under
+`package-user-dir'."
+  (mapcar
+   #'directory-file-name
+   (directory-files package-user-dir t directory-files-no-dot-files-regexp)))
+
+(defun kt--package-dir (root)
+  "Format package directory name in project's ROOT."
+  (expand-file-name
+   (format "kosz-elpa-%s" emacs-version)
+   root))
+
 
 
 (defun kt-run-tests (manifest)
   "Run test described in package MANIFEST.
 
 Return buffer with result of test execution."
-  (let* ((manifest*       (cdr manifest))
-         (temp-directory  (ku-temporary-file-directory))
-         (test-runner     (plist-get manifest* :test-runner))
-         (test-files     (kt--collect-tests manifest))
-         (src-directories (kt--collect-src-directories manifest))
-         (result-buffer   (generate-new-buffer
-                            (format "* Kosz test result %s*" (gensym)))))
-    (make-directory temp-directory)
+  (let* ((root             (car manifest))
+         (manifest*        (cdr manifest))
+         (temp-directory   (ku-temporary-file-directory))
+         (test-runner      (plist-get manifest* :test-runner))
+         (test-files       (kt--collect-tests manifest))
+         (src-directories  (kt--collect-src-directories manifest))
+         (result-buffer    (generate-new-buffer
+                            (format "* Kosz test result %s*" (gensym))))
+         (package-user-dir (kt--package-dir root)))
+    (make-directory temp-directory t)
+    (make-directory package-user-dir t)
+    (kt--ensure-deps manifest)
     (with-current-buffer result-buffer
       (insert
        (kt--call-test-process temp-directory
-                              src-directories
+                              (append src-directories (kt--load-path))
                               test-files
                               test-runner))
       (compilation-mode))
