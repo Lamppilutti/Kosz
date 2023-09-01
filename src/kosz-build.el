@@ -40,14 +40,22 @@
 
 
 
-(defun kb--makeinfo(files directory)
+(defun kb--makeinfo(manifest files directory)
   "Build \\='.info' and \\='dir' files from \\='.texi' FILES inside DIRECTORY.
 
+Path MANIFEST properties to
 Return list of created files."
-  (apply #'ku-call-process "makeinfo" directory files)
-  (dolist (file (ku-directory-files-recursively directory))
-    (ku-call-process "install-info" directory file "dir"))
-  (ku-directory-files-recursively directory))
+  (setq manifest (cdr manifest))
+  (let* ((variable-setters nil))
+    (while-let ((not-empty-p manifest))
+      (push (format "kosz(%s) %s" (pop manifest) (pop manifest))
+            variable-setters)
+      (push "-D" variable-setters))
+    (apply #'ku-call-process "makeinfo" directory
+           (append files variable-setters))
+    (dolist (file (ku-directory-files-recursively directory))
+      (ku-call-process "install-info" directory file "dir"))
+    (ku-directory-files-recursively directory)))
 
 (defun kb--generate-pkg-file (manifest directory)
   "Generate \\='-pkg.el' file from MANIFEST inside DIRECTORY."
@@ -105,7 +113,7 @@ Use MANIFEST for getting information about documentation files."
       (when (or (not (equal ".texi" (file-name-extension file t)))
                 (member file docs-excludes))
         (setq docs-includes (delete file docs-includes))))
-    (dolist (file (kb--makeinfo docs-includes temp-directory))
+    (dolist (file (kb--makeinfo manifest docs-includes temp-directory))
       (rename-file file directory))))
 
 (defun kb--collect-readme (manifest directory)
