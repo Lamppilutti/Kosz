@@ -52,10 +52,6 @@
 
 
 
-(defun kip-unload-function ()
-  (remove-hook 'project-find-functions #'kip-find-project))
-
-
 
 (provide 'kosz-integrations-project)
 
