@@ -1,4 +1,4 @@
-;;; kosz-integrations-projet.el --- kosz integrations with project. -*- lexical-binding: t; -*-
+;;; kosz-integrations-projet.el ---  -*- lexical-binding: t; -*-
 
 ;; This file is not part of GNU Emacs.
 
@@ -20,6 +20,7 @@
 ;; along with Kosz.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
+;; Integration with project package.
 
 ;;; Code:
 
@@ -35,21 +36,24 @@
 
 
 
-(defun kip-find-project (dir)
-  (named-let find-project ((dir dir))
-    (cond
-     ((null dir) nil)
-     ((file-exists-p (expand-file-name km-manifest-file dir)) (cons 'kosz dir))
-     (t (find-project (file-name-parent-directory dir))))))
-
+;;;###autoload
+(defun kosz-integrations-project--find-project (dir)
+    (named-let find-project ((dir dir))
+      (cond
+       ((null dir) nil)
+       ((file-exists-p (expand-file-name km-manifest-file dir)) (cons 'kosz dir))
+       (t (find-project (file-name-parent-directory dir))))))
 
 
 
 (cl-defmethod project-root ((project (head kosz)))
   (cdr project))
 
-(add-hook 'project-find-functions #'kip-find-project)
 
+
+;;;###autoload
+(with-eval-after-load 'project
+  (add-hook 'project-find-functions #'kosz-integrations-project--find-project))
 
 
 
