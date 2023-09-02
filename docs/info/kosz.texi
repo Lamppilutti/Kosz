@@ -1,0 +1,426 @@
+\INPUT texinfo   @c -*-texinfo-*-
+@c %**start of header
+@setfilename kosz.info
+@settitle Kosz Manual
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@copying
+This manual is for Kosz version @value{kosz(:version)}.
+
+Copyright @copyright{} 2023  Lämppi Lütti <lamppilutti@@gmail.com>
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3
+or any later version published by the Free Software Foundation;
+with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
+A copy of the license is included in the section entitled "GNU
+Free Documentation License".
+@end quotation
+@end copying
+
+@dircategory Emacs
+@direntry
+* Kosz: (kosz).                 Emacs package builder.
+@end direntry
+
+@contents
+
+@node Top
+@top Kosz
+
+Kosz is a declarative Emacs package builder. It created to provide
+the Leiningen like expirience for developing Emacs packages with
+comfortable user interface with interactive functions.
+
+Kosz is not a package manager. It does not manages packages and their
+dependencies. It creates tar archives what can be installed by
+@code{package.el}
+
+This manual explains how to work with Kosz.
+
+Kosz --- is basket in Polish language.
+
+@insertcopying
+
+@menu
+* Introduction::
+* Manifest file::
+* Features and User Interface::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Manifest file
+
+* Manifest properties::
+
+User Interface and Features
+
+* Building::
+* Testing::
+
+@end detailmenu
+@end menu
+
+
+
+@node Introduction
+@chapter Introduction
+
+Kosz is a declarative Emacs package builder implemented as Emacs
+package. The main goal is provide the Leiningen like expirience for
+developing Emacs packages. That means the complite package building
+will be made without utilites like Make.
+
+The main target is the @code{package.el} package manager and the Emacs
+@code{load} mechanism.
+
+Note: some Emacs packages have a C code as part of package. Kosz does
+not build native modules. For that list required C code files as
+assets files and build them on final user machine from your package.
+
+@c End: Introduction
+
+
+
+@node Manifest file
+@chapter Manifest file
+
+Before work with Kosz a package is needed to be initialized by
+@file{package.kosz} file. This file is called manifest file. The
+manifest file is just Elisp file but it should contains
+@code{define-package} form.
+
+The @code{define-package} consists from two positional properties and
+variable count of named properties. There is the list of significant
+named properties listed below. If one of this properties will have
+incorrect value the validation error happens.
+
+The @code{define-package} form can also contains an unsignificant
+named properties like @code{:ported-from 'python}, it will not cause
+any error. But if some of Kosz extensions can perceive
+@code{:proted-from} property as significant. This manual proposes
+to use double colon for information only properties, like
+@code{::ported-from 'python}.
+
+There is example of @file{package.kosz} file:
+
+@lisp
+(define-package 'projext-x "1.0.0" ; package-name and version
+  :description  "Super emacs package."
+  :dependencies '((emacs "29.1"))
+
+  :license "GNU GPL 3.0"
+
+  :readme "README.org"
+  :src    '("src")
+  :docs   '("docs/info")
+  :tests  '("tests"))
+@end lisp
+
+Some parts of @code{define-package} form can be function calls:
+
+@lisp
+(define-package 'projext-x (time-convert nil 'integer))
+@end lisp
+
+The result of the call will be calculated at the manifest reading
+step.
+
+@menu
+* Manifest properties::
+@end menu
+
+@c End: Manifest file
+
+
+@node Manifest properties
+@section Manifest properties
+
+@deftypevr {Positional property} symbol :name
+Package name.
+
+It is the first property of @code{define-package} form.
+@end deftypevr
+
+@deftypevr {Positional property} string :version
+Package version.
+
+It is the second property of @code{define-package} form.
+
+The string must be understandable by @code{version-to-list}
+function.
+@end deftypevr
+
+@deftypevr {Named property} string :description
+Package description.
+
+The string must be not empty.
+@end deftypevr
+
+@deftypevr {Named property} list :dependencies
+Package dependencies.
+
+The list must contains (symbol, string) pairs like
+@code{'((emacs "29.1") (seq "1.0"))}. The STRING must be
+understandable by @code{version-to-list} function.
+@end deftypevr
+
+@deftypevr {Named property} list :authors
+Package authors.
+
+The list must contains (string, string) pairs like
+@code{'(("Lämppi Lütti" "lamppilutti@@gmail.com"))}. Both strings
+must be not empy.
+@end deftypevr
+
+@deftypevr {Named property} string :license
+Package license.
+
+The string must be not empty.
+@end deftypevr
+
+@deftypevr {Named property} string :commit
+Commit what is used for package building. For good, shuld be generated
+dynamicly at manifest reading step.
+
+The string must be not empty.
+@end deftypevr
+
+@deftypevr {Named property} list :keywords
+List of keywords describes the package.
+
+The list must contains strings. All the strings must be not empty.
+@end deftypevr
+
+@deftypevr {Named property} list :maintainer
+Package maintainer.
+
+The list must be pair of two strings like
+@code{'("Lämppi Lütti" "lamppilutti@@gmail.com")}. Both strings must
+be not empty.
+@end deftypevr
+
+@deftypevr {Named property} list :src
+List of Elisp source code files. A list entry can be path to file or
+to directory. The path must be relative the package root.
+
+If the entry is path to Elisp file then the file will added to builded
+package.
+
+If the entry is path to directory then all Elisp files located in the
+directory and in the all subdirectories will added to builded package.
+
+The list must contains strings.
+@end deftypevr
+
+@deftypevr {Named property} list :src-exclude
+List of Elisp source code files what should be excluded from :src list
+and not be listed in builded package. A list entry can be path to
+file or to directory. The path must be relative the package root.
+
+If the entry is path to Elisp file then file will excluded from :src
+list.
+
+If the entry is path to directory then all Elisp files located in the
+directory and in the all subdirectories will excluded from :src list.
+
+The list must contains strings.
+@end deftypevr
+
+@deftypevr {Named property} list :docs
+List of texinfo files what should be compiled to info manuals what
+will be added to builded package. A list entry can be path to file or
+to directory. The path must be relative the package root.
+
+If the entry is path to texinfo file then the file will compilet to
+info file and added to result package.
+
+If the entry is path to directory then all texinfo files located in
+the directory and in the all subdirectories will compiled to info
+files and added to result package.
+
+The list must contains strings.
+@end deftypevr
+
+@deftypevr {Named property} list :docs-exclude
+List of texinfo files what should be excluded from :docs list and not
+be used for building info manuals. A list entry can be path to file or
+to directory. The path must be relative the package root.
+
+If the entry is path to texinfo file then the file will be excluded
+from :docs list.
+
+If the entry is path to directory then all texinfo files located in
+the directory and in the all subdirectories will be will be excluded
+from :docs list.
+
+The list must contains strings.
+@end deftypevr
+
+@deftypevr {Named property} list :assets
+List of additional files what shold be listed in builded package. A
+list entry can be path to file or to directory. The path must be
+relative the package root.
+
+If the entry is path to file then the file will be added to result
+package.
+
+If the entry is path to directory then the directory will added to
+result package with all subdirectories and files.
+
+The assets files can be accessed by @code{load-file-name} variable at
+load time.
+
+The list must contains strings.
+@end deftypevr
+
+@deftypevr {Named property} list :assets-exclude
+List of additional files what should be excluded from :assets list
+and not listed in builded package. A list entry can be path to file or
+to directory. The path must be relative the package root.
+
+If the entry is path to file then the file will be excluded from
+:assets list.
+
+If the entry is path to directory then the directory will excluded
+from :assets list.
+
+The list must contains strings.
+@end deftypevr
+
+@deftypevr {Named property} list :test
+List of Elisp files what will loaded before test step. A list entry
+can be path to file or to directory. The path must be relative the
+package root.
+
+If the entry is path to Elisp file then the file will loaded before
+the test step.
+
+If the entry is path to directory then all Elisp files located in the
+directory and in the all subdirectories loaded before test step.
+
+The :test property means that this files will loaded only for testing
+and not will added to builded package.
+
+The list must contains strings.
+@end deftypevr
+
+@deftypevr {Named property} list :test-excludes
+List of Elisp files what shuld be excluded from :test list. A list
+entry can be path to file or to directory. The path must be relative
+the package root.
+
+If the entry is path to Elisp file then file will excluded from :test
+list.
+
+If the entry is path to directory then all Elisp files located in the
+directory and in the all subdirectories will excluded from :test list.
+
+The list must contains strings.
+@end deftypevr
+
+@deftypevr {Named property} function :test-runner
+Elisp function for run tests in batch modes.
+
+The function should write result of test run in standart output.
+@end deftypevr
+
+@c End: Manifest properties
+
+
+
+@node Features and User Interface
+@chapter Features and User Interface
+
+When there is manifest file, Kosz can provide next features:
+
+@itemize @bullet
+
+@item
+Package building.
+
+@item
+Package testing.
+
+@item
+@code{project.el} integration: recognizing project by
+@file{package.kosz} file.
+
+@end itemize
+
+@menu
+* Building::
+* Testing::
+@end menu
+
+@c End: User Interface and Features
+
+
+@node Building
+@section Building
+
+The building process consists from several actions. The result of the
+actions is tar archive with single directory. The archive can be
+installed by @code{package.el}, or extracted and the directory can be
+registered in @code{load-file-path}.
+
+@code{:src} files will collected as is and placed to the archive
+without subdirectories. That means all files in package must have
+unique name even if they are in different directories. E.g. if
+a file was listed as @file{path/to/elisp.el} then it will added to the
+archive as @file{elisp.el}.
+
+@code{:readme} file will collected as @file{README} file and placed to
+the archive.
+
+@code{:docs} files will collected and builded to info manual. It also
+creates the @file{dir} file.
+
+@code{:assets} files will collected as is and placed to archive with
+related path. E.g. if a file will listed as @file{path/to/file}
+then it will added to archive as @file{path/to/file}.
+
+The archive can be founded in @file{build} directory in package root.
+
+The building features are provided as interactive functions.
+
+@kbd{M-x kosz-build-package}
+The function asks path to a package and tryes to build it.
+
+@kbd{M-x kosz-build-vc-package}
+The function asks repository URL, path to directory where place
+builded package, version control system and revision. The revision can
+be empty. Then clone repository and build cloned package.
+
+@kbd{M-x kosz-build-and-install-package}
+Like @code{kosz-build-package} but installs resulted package after.
+
+@kbd{M-x kosz-build-and-intsll-vc-package}
+Like @code{kosz-build-vc-package} but installs resulted package after.
+
+@c End: Building
+
+
+@node Testing
+@section Testing
+
+The testing features are provided as interactive functions.
+
+@kbd{M-x kosz-test-package}
+The function requires defined @code{:tests} and @code{:tests-runner}
+properties in manifest file.
+
+The function opens new Emacs instance in batch mode, load @code{:src}
+and @code{:tests} files and runs @code{:tests-runner} function. As
+result it pops new buffer with printed result of @code{:test-runner}
+function.
+
+@c End: Testing
+
+
+
+@bye
