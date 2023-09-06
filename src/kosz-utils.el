@@ -136,7 +136,7 @@ actially file return (FILE) list."
 
 If file is directory then recursively get files of it whithout subdirectories."
   (declare (side-effect-free t))
-  (let* ((expanded-files (list "")))
+  (let* ((expanded-files (list nil)))
     (dolist (file files expanded-files)
       (thread-last
         (expand-file-name file directory)
