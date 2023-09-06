@@ -117,9 +117,10 @@ Use MANIFEST for getting information about documentation files."
       (rename-file file directory))))
 
 (defun kb--collect-readme (manifest directory)
-  (let* ((root        (car manifest))
-         (manifest*   (cdr manifest))
-         (readme-file (expand-file-name (plist-get manifest* :readme) root)))
+  (when-let* ((root         (car manifest))
+              (manifest*    (cdr manifest))
+              (readme-file  (plist-get manifest* :readme))
+              (readme-file* (expand-file-name  root)))
     (copy-file readme-file (file-name-concat directory "README") t)))
 
 
