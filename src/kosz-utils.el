@@ -32,15 +32,15 @@
 
 
 
-(define-error 'ku-external-process-error
+(define-error 'kutils-external-process-error
   "Externall process ends with error")
 
-(define-error 'ku-validation-error
+(define-error 'kutils-validation-error
   "Plist has invalid properties")
 
 
 
-(defmacro ku-plist-validation (plist &rest property-cases)
+(defmacro kutils-plist-validation (plist &rest property-cases)
   "Utility macros for validate PLIST.
 
 PROPERTY-CASES is a list of (PROPERTY BIND COND MESSAGE) elements.
@@ -76,15 +76,15 @@ after checking all PROPERTY-CASES there is one or more error forms then signal
             ,@bindings)
        ,@cases*
        (when ,errors-sym
-         (signal 'ku-validation-error
+         (signal 'kutils-validation-error
                  (list :invalid-properties ,errors-sym))))))
 
-(defun ku-buffer-string ()
+(defun kutils-buffer-string ()
   "Return the content of current buffer as a string without properties."
   (declare (side-effect-free t))
   (buffer-substring-no-properties (point-min) (point-max)))
 
-(defun ku-call-process (program directory &rest args)
+(defun kutils-call-process (program directory &rest args)
   "Return the result of executing PROGRAM as string.
 
 DIRECTORY is path to the directory in which PROGRAM will executed.
@@ -96,14 +96,14 @@ Signal `kosz-utils--external-process-error' if PROGRAM ends with an error."
     (with-temp-buffer
       (setq process-exit-code (apply #'call-process program nil t nil args))
       (if (= 0 process-exit-code)
-          (ku-buffer-string)
-        (signal 'ku-external-process-error
+          (kutils-buffer-string)
+        (signal 'kutils-external-process-error
                 (list (cons :process   program)
                       (cons :args      args)
                       (cons :exit-code process-exit-code)
-                      (cons :output    (ku-buffer-string))))))))
+                      (cons :output    (kutils-buffer-string))))))))
 
-(defun ku-copy-file (file newname)
+(defun kutils-copy-file (file newname)
   "Copy FILE to NEWNAME.
 
 Create directories in NEWNAME path, if they don't exist."
@@ -111,7 +111,7 @@ Create directories in NEWNAME path, if they don't exist."
     (make-directory destination t)
     (copy-file file newname)))
 
-(defun ku-directory-files-recursively (file)
+(defun kutils-directory-files-recursively (file)
   "Return list of files.
 
 If FILE is directory return its contant recursively. Otherwice if FILE is
@@ -122,7 +122,7 @@ actially file return (FILE) list."
                                    nil nil t)
     (list file)))
 
-(defun ku-temporary-file-directory ()
+(defun kutils-temporary-file-directory ()
   "Return (almost) unique temporary file name."
   (declare (side-effect-free t))
   (thread-last
@@ -131,7 +131,7 @@ actially file return (FILE) list."
     (file-name-concat (temporary-file-directory))
     (file-name-as-directory)))
 
-(defun ku-expand-files (files directory)
+(defun kutils-expand-files (files directory)
   "Recursively expand FILES relative to DIRECTORY.
 
 If file is directory then recursively get files of it whithout subdirectories."
@@ -140,37 +140,37 @@ If file is directory then recursively get files of it whithout subdirectories."
     (dolist (file files expanded-files)
       (thread-last
         (expand-file-name file directory)
-        (ku-directory-files-recursively)
+        (kutils-directory-files-recursively)
         (nconc expanded-files)))))
 
-(defun ku-version-string-p (object)
+(defun kutils-version-string-p (object)
   "Return t if OBJECT is string that `version-to-list' understood."
   (declare (pure t) (side-effect-free t))
   (condition-case _
       (version-to-list object)
     (error nil)))
 
-(defun ku-not-blank-string-p (object)
+(defun kutils-not-blank-string-p (object)
   "Return t if OBJECT is nil or not blank string."
   (declare (pure t) (side-effect-free t))
   (or (null object)
       (and (stringp object)
            (not (string-blank-p object)))))
 
-(defun ku-not-blank-string-p* (object)
+(defun kutils-not-blank-string-p* (object)
   "Return t if OBJECT is not blank string."
   (declare (pure t) (side-effect-free t))
   (and (stringp object)
        (not (string-blank-p object))))
 
-(defun ku-symbolp (object)
+(defun kutils-symbolp (object)
   "Return t if OBJECT is a symbol, but not nil and not a keyword."
   (declare (pure t) (side-effect-free t))
   (and (symbolp object)
        (not (keywordp object))
        (not (null object))))
 
-(defun ku-pairp (object firstp secondp)
+(defun kutils-pairp (object firstp secondp)
   "Return t if OBJECT is nil or pair.
 
 Check the first element of pair by FIRSTP, and the second by SECONDP.
@@ -181,7 +181,7 @@ The pair is list of two elements, for example (1 2)."
       (and (funcall firstp (car object))
            (funcall secondp (cdar object)))))
 
-(defun ku-list-of-pairs-p (object firstp secondp)
+(defun kutils-list-of-pairs-p (object firstp secondp)
   "Return t if OBJECT is nil or a list of pairs.
 
 Check the first element of pair by FIRSTP, and the second by SECONDP.
@@ -194,13 +194,13 @@ The pair is list of two elements, for example (1 2)."
     (setq object (cdr object)))
   (null object))
 
-(defun ku-functionp (object)
+(defun kutils-functionp (object)
   "Return t if OBJECT is nil or function."
   (declare (pure t) (side-effect-free t))
   (or (null object)
       (functionp object)))
 
-(defun ku-pair->cons (pair)
+(defun kutils-pair->cons (pair)
   "Return cons created from PAIR.  If PAIR is nil return nil.
 
 The pair is list of two elements, for example (1 2)."
@@ -208,7 +208,7 @@ The pair is list of two elements, for example (1 2)."
       nil
     (cons (car pair) (cadr pair))))
 
-(defun ku-pairs->alist (pairs)
+(defun kutils-pairs->alist (pairs)
   "Retun alist created from list of PAIRS.
 
 The pair is list of two elements, for example (1 2)."
@@ -224,7 +224,7 @@ The pair is list of two elements, for example (1 2)."
 (provide 'kosz-utils)
 
 ;; Local Variables:
-;; read-symbol-shorthands: (("ku-" . "kosz-utils-"))
+;; read-symbol-shorthands: (("kutils-" . "kosz-utils-"))
 ;; End:
 
 ;;; kosz-utils.el ends here.

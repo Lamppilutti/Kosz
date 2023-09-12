@@ -53,9 +53,9 @@ Use MANIFEST for getting information about test files."
   (let* ((root           (car manifest))
          (manifest*      (cdr manifest))
          (tests-includes (thread-first (plist-get manifest* :tests)
-                                       (ku-expand-files root)))
+                                       (kutils-expand-files root)))
          (tests-excludes (thread-first (plist-get manifest* :tests-exclude)
-                                       (ku-expand-files root)))
+                                       (kutils-expand-files root)))
          (files          nil))
     (dolist (file tests-includes files)
       (when (and (not (member file tests-excludes))
@@ -69,9 +69,9 @@ Use MANIFEST for getting information about src directories."
   (let* ((root         (car manifest))
          (manifest*    (cdr manifest))
          (src-includes (thread-first (plist-get manifest* :src)
-                                     (ku-expand-files root)))
+                                     (kutils-expand-files root)))
          (src-excludes (thread-first (plist-get manifest* :src-exclude)
-                                     (ku-expand-files root)))
+                                     (kutils-expand-files root)))
          (directories  nil))
     (dolist (file src-includes)
       (when (and (not (member file src-excludes))
@@ -93,10 +93,10 @@ If process ends with error return error message as result."
                                 load-files))
          (--funcall     (list "--funcall" (format "%s" test-runner))))
     (condition-case process-error
-        (apply #'ku-call-process "emacs" directory
+        (apply #'kutils-call-process "emacs" directory
                "--batch" "--quick"
                (nconc --directories --load --funcall)) ; Order is important.
-      (ku-external-process-error
+      (kutils-external-process-error
        (alist-get :output process-error)))))
 
 (defun kt--load-path ()
@@ -121,7 +121,7 @@ Load path is based on all of the packages under
 Return buffer with result of test execution."
   (let* ((root             (car manifest))
          (manifest*        (cdr manifest))
-         (temp-directory   (ku-temporary-file-directory))
+         (temp-directory   (kutils-temporary-file-directory))
          (test-runner      (plist-get manifest* :test-runner))
          (test-files       (kt--collect-tests manifest))
          (src-directories  (kt--collect-src-directories manifest))
@@ -164,7 +164,7 @@ Ask directory of package which tests need to run."
 ;; Local Variables:
 ;; read-symbol-shorthands: (("kt-" . "kosz-test-")
 ;;                          ("km-" . "kosz-manifest-")
-;;                          ("ku-" . "kosz-utils-"))
+;;                          ("kutils-" . "kosz-utils-"))
 ;; End:
 
 ;;; kosz-test.el ends here.

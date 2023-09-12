@@ -51,11 +51,11 @@ Return list of created files."
       (push (format "kosz(%s) %s" (pop manifest) (pop manifest))
             variable-setters)
       (push "-D" variable-setters))
-    (apply #'ku-call-process "makeinfo" directory
+    (apply #'kutils-call-process "makeinfo" directory
            (append files variable-setters))
-    (dolist (file (ku-directory-files-recursively directory))
-      (ku-call-process "install-info" directory file "dir"))
-    (ku-directory-files-recursively directory)))
+    (dolist (file (kutils-directory-files-recursively directory))
+      (kutils-call-process "install-info" directory file "dir"))
+    (kutils-directory-files-recursively directory)))
 
 (defun kb--generate-pkg-file (manifest directory)
   "Generate \\='-pkg.el' file from MANIFEST inside DIRECTORY."
@@ -73,9 +73,9 @@ Use MANIFEST for getting information about source code files."
   (let* ((root         (car manifest))
          (manifest*    (cdr manifest))
          (src-includes (thread-first (plist-get manifest* :src)
-                                     (ku-expand-files root)))
+                                     (kutils-expand-files root)))
          (src-excludes (thread-first (plist-get manifest* :src-exclude)
-                                     (ku-expand-files root))))
+                                     (kutils-expand-files root))))
     (dolist (file src-includes)
       (when (and (not (member file src-excludes))
                  (equal ".el" (file-name-extension file t)))
@@ -88,14 +88,14 @@ Use MANIFEST for getting information about assets files."
   (let* ((root            (car manifest))
          (manifest*       (cdr manifest))
          (assets-includes (thread-first (plist-get manifest* :assets)
-                                        (ku-expand-files root)))
+                                        (kutils-expand-files root)))
          (assets-excludes (thread-first (plist-get manifest* :assets-exclude)
-                                        (ku-expand-files root))))
+                                        (kutils-expand-files root))))
     (dolist (file assets-includes)
       (when (not (member file assets-excludes))
         (thread-last (file-relative-name file root)
                      (file-name-concat directory)
-                     (ku-copy-file file))))))
+                     (kutils-copy-file file))))))
 
 (defun kb--collect-docs (manifest directory)
   "Compile package \\='.texi' documentation files to DIRECTORY.
@@ -104,10 +104,10 @@ Use MANIFEST for getting information about documentation files."
   (let* ((root           (car manifest))
          (manifest*      (cdr manifest))
          (docs-includes  (thread-first (plist-get manifest* :docs)
-                                       (ku-expand-files root)))
+                                       (kutils-expand-files root)))
          (docs-excludes  (thread-first (plist-get manifest* :docs-exclude)
-                                       (ku-expand-files root)))
-         (temp-directory (ku-temporary-file-directory)))
+                                       (kutils-expand-files root)))
+         (temp-directory (kutils-temporary-file-directory)))
     (make-directory temp-directory t)
     (dolist (file docs-includes)
       (when (or (not (equal ".texi" (file-name-extension file t)))
@@ -148,8 +148,8 @@ Skip properties what have no use for \\='package.el'."
           :url        url
           :commit     commit
           :keywords   keywords
-          :maintainer (ku-pair->cons maintainer)
-          :authors    (ku-pairs->alist authors))))
+          :maintainer (kutils-pair->cons maintainer)
+          :authors    (kutils-pairs->alist authors))))
 
 (defun kb-build (manifest)
   "Build package tar file from MANIFEST that \\='package.el' understood.
@@ -174,9 +174,9 @@ The tar file contains directory what can be used in `load-path'."
           (kb--collect-assets manifest package-directory)
           (kb--collect-docs manifest package-directory)
           (kb--collect-readme manifest package-directory)
-          (ku-call-process "tar" build-directory
-                           "-cf" package-tar-file
-                           package-fullname)
+          (kutils-call-process "tar" build-directory
+                               "-cf" package-tar-file
+                               package-fullname)
           (expand-file-name package-tar-file build-directory))
       (delete-directory package-directory t))))
 
@@ -216,7 +216,7 @@ Ask package repository URL, DIRECTORY to place builded package, VCS for use and
 REVISION of repository.  Revision can be empty."
   (declare (interactive-only t))
   (interactive)
-  (let* ((temp-dir  (ku-temporary-file-directory))
+  (let* ((temp-dir  (kutils-temporary-file-directory))
          (remote    (read-string "Repository URL: "))
          (directory (read-directory-name "Diestination: "))
          (backend   (intern
@@ -237,7 +237,7 @@ Ask package repository URL, VCS for use and REVISION of repository.
 REVISION can be empty."
   (declare (interactive-only t))
   (interactive)
-  (let* ((temp-dir (ku-temporary-file-directory))
+  (let* ((temp-dir (kutils-temporary-file-directory))
          (remote   (read-string "Install from: "))
          (backend  (intern
                     (completing-read "Use backend: " vc-handled-backends)))
@@ -256,7 +256,7 @@ REVISION can be empty."
 ;; Local Variables:
 ;; read-symbol-shorthands: (("kb-" . "kosz-build-")
 ;;                          ("km-" . "kosz-manifest-")
-;;                          ("ku-" . "kosz-utils-"))
+;;                          ("kutils-" . "kosz-utils-"))
 ;; End:
 
 ;;; kosz-build.el ends here.
