@@ -30,12 +30,12 @@
 
 
 
-(defconst km-manifest-file "package.kosz"
+(defconst kmanifest-manifest-file "package.kosz"
   "Manifest file name.")
 
 
 
-(defun km--init-emacs ()
+(defun kmanifest--init-emacs ()
   "Return code for initialazing Emacs.
 
 It defines \\='define-package' form and makes shure that result of
@@ -56,7 +56,7 @@ This code should be evaluated before any \\='load'."
 
 
 
-(defun km-validate-manifest (manifest)
+(defun kmanifest-validate-manifest (manifest)
   "Validate MANIFEST properties.
 
 Return MANIFEST if all base properties valid.  Otherwice signal
@@ -128,7 +128,7 @@ or nil")
      test-runner (kutils-functionp test-runner)))
   manifest)
 
-(defun km-read-manifest (directory)
+(defun kmanifest-read-manifest (directory)
   "Read manifest from DIRECTORY.
 
 Manifest is (PATH . PLIST) cons, where PATH is path to the directory from
@@ -140,9 +140,9 @@ If manifest invalid signal `kosz-manifest-validation-error'."
   (with-temp-buffer
     (insert (kutils-call-process "emacs" directory
                              "--batch" "--quick"
-                             "--eval" (format "%S" (km--init-emacs))
-                             "--load" km-manifest-file))
-    (km-validate-manifest
+                             "--eval" (format "%S" (kmanifest--init-emacs))
+                             "--load" kmanifest-manifest-file))
+    (kmanifest-validate-manifest
      (cons (abbreviate-file-name directory)
            (sexp-at-point)))))
 
@@ -151,8 +151,8 @@ If manifest invalid signal `kosz-manifest-validation-error'."
 (provide 'kosz-manifest)
 
 ;; Local Variables:
-;; read-symbol-shorthands: (("km-" . "kosz-manifest-")
-;;                          ("kutils-" . "kosz-utils-"))
+;; read-symbol-shorthands: (("kmanifest-" . "kosz-manifest-")
+;;                          ("kutils-"    . "kosz-utils-"))
 ;; End:
 
 ;;; kosz-manifest.el ends here.
