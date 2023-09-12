@@ -153,7 +153,7 @@ Ask directory of package which tests need to run."
     (thread-last
       (project-current)
       (project-root)
-      (km-read-manifest)
+      (kmanifest-read-manifest)
       (kt-run-tests)
       (pop-to-buffer))))
 
@@ -163,8 +163,8 @@ Ask directory of package which tests need to run."
 
 ;; Local Variables:
 ;; read-symbol-shorthands: (("kt-" . "kosz-test-")
-;;                          ("km-" . "kosz-manifest-")
-;;                          ("kutils-" . "kosz-utils-"))
+;;                          ("kmanifest-" . "kosz-manifest-")
+;;                          ("kutils-"    . "kosz-utils-"))
 ;; End:
 
 ;;; kosz-test.el ends here.

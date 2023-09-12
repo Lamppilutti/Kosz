@@ -194,7 +194,7 @@ Ask directory of package for build.  Resulted package will be placed in
     (thread-last
       (project-current)
       (project-root)
-      (km-read-manifest)
+      (kmanifest-read-manifest)
       (kb-build))))
 
 ;;;###autoload
@@ -225,7 +225,7 @@ REVISION of repository.  Revision can be empty."
          (revision  (if (equal "" revision*) nil revision*)))
     (thread-first
       (vc-clone remote backend temp-dir revision)
-      (km-read-manifest)
+      (kmanifest-read-manifest)
       (kb-build)
       (rename-file directory))))
 
@@ -245,7 +245,7 @@ REVISION can be empty."
          (revision  (if (equal "" revision*) nil revision*)))
     (thread-first
       (vc-clone remote backend temp-dir revision)
-      (km-read-manifest)
+      (kmanifest-read-manifest)
       (kb-build)
       (package-install-file))))
 
@@ -255,8 +255,8 @@ REVISION can be empty."
 
 ;; Local Variables:
 ;; read-symbol-shorthands: (("kb-" . "kosz-build-")
-;;                          ("km-" . "kosz-manifest-")
-;;                          ("kutils-" . "kosz-utils-"))
+;;                          ("kmanifest-" . "kosz-manifest-")
+;;                          ("kutils-"    . "kosz-utils-"))
 ;; End:
 
 ;;; kosz-build.el ends here.

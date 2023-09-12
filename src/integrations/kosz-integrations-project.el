@@ -41,7 +41,8 @@
     (named-let find-project ((dir dir))
       (cond
        ((null dir) nil)
-       ((file-exists-p (expand-file-name km-manifest-file dir)) (cons 'kosz dir))
+       ((file-exists-p (expand-file-name kmanifest-manifest-file dir))
+        (cons 'kosz dir))
        (t (find-project (file-name-parent-directory dir))))))
 
 
@@ -61,7 +62,7 @@
 
 ;; Local Variables:
 ;; read-symbol-shorthands: (("kip-" . "kosz-integrations-project-")
-;;                          ("km-"  . "kosz-manifest-"))
+;;                          ("kmanifest-"  . "kosz-manifest-"))
 ;; End:
 
 ;;; kosz-integrations-project.el ends here.
