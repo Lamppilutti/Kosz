@@ -1,19 +1,18 @@
 * Kosz
 Declarative Emacs package builder.
 
-The goal is provide the Leiningen like expirience for package developing and the
-interactive-function user interface for package operating.
+It created to provide the Leiningen like expirience for developing Emacs
+packages with comfortable user interface with interactive functions.
 
-This is not a package manager and not manages packages and their dependencies.
-It builds a tar archives for package.el. It also provides the api for
-reading manifest file for cases when is need to create package for other package
-manager.
+Kosz is not a package manager. It doesn't manages packages and their
+dependencies. It creates tar archives what can be installed by package.el
 
 For information about how to use Kosz read the manual.
 
-#
 # The end of README if you read this from package-description buffer.
-#
+
+
+
 ** Building and installation
 Kosz is multi-file package what means it includes several Emacs Lisp files and
 info manual. For simplifying the building there is the build.el Emacs Lisp

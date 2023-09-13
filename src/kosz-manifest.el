@@ -30,12 +30,12 @@
 
 
 
-(defconst km-manifest-file "package.kosz"
+(defconst kmanifest-manifest-file "package.kosz"
   "Manifest file name.")
 
 
 
-(defun km--init-emacs ()
+(defun kmanifest--init-emacs ()
   "Return code for initialazing Emacs.
 
 It defines \\='define-package' form and makes shure that result of
@@ -56,47 +56,49 @@ This code should be evaluated before any \\='load'."
 
 
 
-(defun km-validate-manifest (manifest)
+(defun kmanifest-validate-manifest (manifest)
   "Validate MANIFEST properties.
 
 Return MANIFEST if all base properties valid.  Otherwice signal
 `kosz-utils-validation-error'."
-  (ku-plist-validation (cdr manifest)
+  (kutils-plist-validation (cdr manifest)
     (:name
-     name (ku-symbolp name)
+     name (kutils-symbolp name)
      "Not nil symbol")
     (:version
-     version (ku-version-string-p version)
+     version (kutils-version-string-p version)
      "String of a form that can be understood by `version-to-list'")
     (:description
-     desc (ku-not-blank-string-p desc)
+     desc (kutils-not-blank-string-p desc)
      "Not blank string or nil")
     (:dependencies
-     deps (ku-list-of-pairs-p deps #'ku-symbolp #'ku-version-string-p)
+     deps (kutils-list-of-pairs-p
+           deps #'kutils-symbolp #'kutils-version-string-p)
      "List of (not nil symbol - `version-to-list' undestandable string) pairs, \
 or nil")
     (:url
-     url (ku-not-blank-string-p url)
+     url (kutils-not-blank-string-p url)
      "String or nil")
     (:authors
-     authors (ku-list-of-pairs-p
-              authors #'ku-not-blank-string-p* #'ku-not-blank-string-p*)
+     authors (kutils-list-of-pairs-p
+              authors #'kutils-not-blank-string-p* #'kutils-not-blank-string-p*)
      "List of (not blank string - not blank string) pairs, or nil")
     (:license
-     license (ku-not-blank-string-p license)
+     license (kutils-not-blank-string-p license)
      "Not blank string or nil")
     (:commit
-     commit (ku-not-blank-string-p commit)
+     commit (kutils-not-blank-string-p commit)
      "String or nil")
     (:keywords
      keywords (list-of-strings-p keywords)
      "List of strings or nil")
     (:maintainer
-     maintainer (ku-pairp
-                 maintainer #'ku-not-blank-string-p* #'ku-not-blank-string-p*)
+     maintainer (kutils-pairp maintainer
+                              #'kutils-not-blank-string-p*
+                              #'kutils-not-blank-string-p*)
      "Pair of not blank strings or nil")
     (:readme
-     readme (ku-not-blank-string-p readme)
+     readme (kutils-not-blank-string-p readme)
      "Not blank string or nil")
     (:src
      src (list-of-strings-p src)
@@ -123,10 +125,10 @@ or nil")
      tests-ex (list-of-strings-p tests)
      "List of strings or nil")
     (:test-runner
-     test-runner (ku-functionp test-runner)))
+     test-runner (kutils-functionp test-runner)))
   manifest)
 
-(defun km-read-manifest (directory)
+(defun kmanifest-read-manifest (directory)
   "Read manifest from DIRECTORY.
 
 Manifest is (PATH . PLIST) cons, where PATH is path to the directory from
@@ -136,11 +138,11 @@ the manifest file.
 If manifest invalid signal `kosz-manifest-validation-error'."
   (setq directory (expand-file-name directory))
   (with-temp-buffer
-    (insert (ku-call-process "emacs" directory
+    (insert (kutils-call-process "emacs" directory
                              "--batch" "--quick"
-                             "--eval" (format "%S" (km--init-emacs))
-                             "--load" km-manifest-file))
-    (km-validate-manifest
+                             "--eval" (format "%S" (kmanifest--init-emacs))
+                             "--load" kmanifest-manifest-file))
+    (kmanifest-validate-manifest
      (cons (abbreviate-file-name directory)
            (sexp-at-point)))))
 
@@ -149,8 +151,8 @@ If manifest invalid signal `kosz-manifest-validation-error'."
 (provide 'kosz-manifest)
 
 ;; Local Variables:
-;; read-symbol-shorthands: (("km-" . "kosz-manifest-")
-;;                          ("ku-" . "kosz-utils-"))
+;; read-symbol-shorthands: (("kmanifest-" . "kosz-manifest-")
+;;                          ("kutils-"    . "kosz-utils-"))
 ;; End:
 
 ;;; kosz-manifest.el ends here.
