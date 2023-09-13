@@ -136,12 +136,13 @@ actially file return (FILE) list."
 
 If file is directory then recursively get files of it whithout subdirectories."
   (declare (side-effect-free t))
-  (let* ((expanded-files (list nil)))
+  (let* ((expanded-files nil))
     (dolist (file files expanded-files)
       (thread-last
         (expand-file-name file directory)
         (kutils-directory-files-recursively)
-        (nconc expanded-files)))))
+        (nconc expanded-files)
+        (setq expanded-files)))))
 
 (defun kutils-version-string-p (object)
   "Return t if OBJECT is string that `version-to-list' understood."
