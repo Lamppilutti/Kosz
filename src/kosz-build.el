@@ -40,7 +40,7 @@
 
 
 
-(defun kb--makeinfo(manifest files directory)
+(defun kbuild--makeinfo(manifest files directory)
   "Build \\='.info' and \\='dir' files from \\='.texi' FILES inside DIRECTORY.
 
 Path MANIFEST properties to
@@ -57,16 +57,16 @@ Return list of created files."
       (kutils-call-process "install-info" directory file "dir"))
     (kutils-directory-files-recursively directory)))
 
-(defun kb--generate-pkg-file (manifest directory)
+(defun kbuild--generate-pkg-file (manifest directory)
   "Generate \\='-pkg.el' file from MANIFEST inside DIRECTORY."
   (let* ((manifest*           (cdr manifest))
-         (define-package-form (kb-manifest->define-package manifest))
+         (define-package-form (kbuild-manifest->define-package manifest))
          (file-name           (format "%s-pkg.el" (plist-get manifest* :name))))
     (with-temp-file (file-name-concat directory file-name)
       (pp-emacs-lisp-code define-package-form)
       (insert "\n;; Local Variables:\n;; no-byte-compile: t\n;; End:\n"))))
 
-(defun kb--collect-src (manifest directory)
+(defun kbuild--collect-src (manifest directory)
   "Copy package's source code files to DIRECTORY.
 
 Use MANIFEST for getting information about source code files."
@@ -81,7 +81,7 @@ Use MANIFEST for getting information about source code files."
                  (equal ".el" (file-name-extension file t)))
         (copy-file file directory t)))))
 
-(defun kb--collect-assets (manifest directory)
+(defun kbuild--collect-assets (manifest directory)
   "Copy package assets files to DIRECTORY.
 
 Use MANIFEST for getting information about assets files."
@@ -97,7 +97,7 @@ Use MANIFEST for getting information about assets files."
                      (file-name-concat directory)
                      (kutils-copy-file file))))))
 
-(defun kb--collect-docs (manifest directory)
+(defun kbuild--collect-docs (manifest directory)
   "Compile package \\='.texi' documentation files to DIRECTORY.
 
 Use MANIFEST for getting information about documentation files."
@@ -113,10 +113,10 @@ Use MANIFEST for getting information about documentation files."
       (when (or (not (equal ".texi" (file-name-extension file t)))
                 (member file docs-excludes))
         (setq docs-includes (delete file docs-includes))))
-    (dolist (file (kb--makeinfo manifest docs-includes temp-directory))
+    (dolist (file (kbuild--makeinfo manifest docs-includes temp-directory))
       (rename-file file directory))))
 
-(defun kb--collect-readme (manifest directory)
+(defun kbuild--collect-readme (manifest directory)
   (when-let* ((root         (car manifest))
               (manifest*    (cdr manifest))
               (readme-file  (plist-get manifest* :readme))
@@ -125,7 +125,7 @@ Use MANIFEST for getting information about documentation files."
 
 
 
-(defun kb-manifest->define-package (manifest)
+(defun kbuild-manifest->define-package (manifest)
   "Return \\='define-package' form generated from MANIFEST.
 
 If MANIFEST extra properties are invalid signal `kosz-utils-validation-error'.
@@ -151,7 +151,7 @@ Skip properties what have no use for \\='package.el'."
           :maintainer (kutils-pair->cons maintainer)
           :authors    (kutils-pairs->alist authors))))
 
-(defun kb-build (manifest)
+(defun kbuild-build (manifest)
   "Build package tar file from MANIFEST that \\='package.el' understood.
 
 The tar file contains directory what can be used in `load-path'."
@@ -169,11 +169,11 @@ The tar file contains directory what can be used in `load-path'."
     (unwind-protect
         (progn
           (make-directory package-directory t)
-          (kb--generate-pkg-file manifest package-directory)
-          (kb--collect-src manifest package-directory)
-          (kb--collect-assets manifest package-directory)
-          (kb--collect-docs manifest package-directory)
-          (kb--collect-readme manifest package-directory)
+          (kbuild--generate-pkg-file manifest package-directory)
+          (kbuild--collect-src manifest package-directory)
+          (kbuild--collect-assets manifest package-directory)
+          (kbuild--collect-docs manifest package-directory)
+          (kbuild--collect-readme manifest package-directory)
           (kutils-call-process "tar" build-directory
                                "-cf" package-tar-file
                                package-fullname)
@@ -195,7 +195,7 @@ Ask directory of package for build.  Resulted package will be placed in
       (project-current)
       (project-root)
       (kmanifest-read-manifest)
-      (kb-build))))
+      (kbuild-build))))
 
 ;;;###autoload
 (defun kosz-build-and-install-package ()
@@ -226,7 +226,7 @@ REVISION of repository.  Revision can be empty."
     (thread-first
       (vc-clone remote backend temp-dir revision)
       (kmanifest-read-manifest)
-      (kb-build)
+      (kbuild-build)
       (rename-file directory))))
 
 ;;;###autoload
@@ -246,7 +246,7 @@ REVISION can be empty."
     (thread-first
       (vc-clone remote backend temp-dir revision)
       (kmanifest-read-manifest)
-      (kb-build)
+      (kbuild-build)
       (package-install-file))))
 
 
@@ -254,7 +254,7 @@ REVISION can be empty."
 (provide 'kosz-build)
 
 ;; Local Variables:
-;; read-symbol-shorthands: (("kb-" . "kosz-build-")
+;; read-symbol-shorthands: (("kbuild-"    . "kosz-build-")
 ;;                          ("kmanifest-" . "kosz-manifest-")
 ;;                          ("kutils-"    . "kosz-utils-"))
 ;; End:
