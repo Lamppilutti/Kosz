@@ -37,7 +37,7 @@
 
 
 
-(defun kt--collect-tests (manifest)
+(defun ktest--collect-tests (manifest)
   "Return list of tests files.
 
 Use MANIFEST for getting information about test files."
@@ -53,7 +53,7 @@ Use MANIFEST for getting information about test files."
                  (equal ".el" (file-name-extension file t)))
         (push file files)))))
 
-(defun kt--collect-src-directories (manifest)
+(defun ktest--collect-src-directories (manifest)
   "Collect src dicrectories.
 
 Use MANIFEST for getting information about src directories."
@@ -70,7 +70,7 @@ Use MANIFEST for getting information about src directories."
         (push (file-name-directory file) directories)))
     (delete-dups directories)))
 
-(defun kt--call-test-process (directory load-directories load-files test-runner)
+(defun ktest--call-test-process (directory load-directories load-files test-runner)
   "Run tests in separate Emacs process.
 
 Tests will runned inside DIRECTORY.  LOAD-DIRECTORIES will added to `load-path'.
@@ -92,21 +92,21 @@ If process ends with error return error message as result."
 
 
 
-(defun kt-run-tests (manifest)
+(defun ktest-run-tests (manifest)
   "Run test described in package MANIFEST.
 
 Return buffer with result of test execution."
   (let* ((manifest*       (cdr manifest))
          (temp-directory  (kutils-temporary-file-directory))
          (test-runner     (plist-get manifest* :test-runner))
-         (test-files     (kt--collect-tests manifest))
-         (src-directories (kt--collect-src-directories manifest))
+         (test-files     (ktest--collect-tests manifest))
+         (src-directories (ktest--collect-src-directories manifest))
          (result-buffer   (generate-new-buffer
                             (format "* Kosz test result %s*" (gensym)))))
     (make-directory temp-directory)
     (with-current-buffer result-buffer
       (insert
-       (kt--call-test-process temp-directory
+       (ktest--call-test-process temp-directory
                               src-directories
                               test-files
                               test-runner))
@@ -127,7 +127,7 @@ Ask directory of package which tests need to run."
       (project-current)
       (project-root)
       (kmanifest-read-manifest)
-      (kt-run-tests)
+      (ktest-run-tests)
       (pop-to-buffer))))
 
 
@@ -135,7 +135,7 @@ Ask directory of package which tests need to run."
 (provide 'kosz-test)
 
 ;; Local Variables:
-;; read-symbol-shorthands: (("kt-" . "kosz-test-")
+;; read-symbol-shorthands: (("ktest-"     . "kosz-test-")
 ;;                          ("kmanifest-" . "kosz-manifest-")
 ;;                          ("kutils-"    . "kosz-utils-"))
 ;; End:
