@@ -142,23 +142,6 @@ Return buffer with result of test execution."
 
 
 
-;;;###autoload
-(defun kosz-test-package ()
-  "Run tests of selected package.
-
-Ask directory of package which tests need to run."
-  (declare (interactive-only t))
-  (interactive)
-  (let* ((default-directory (read-directory-name "Package directory: ")))
-    (thread-last
-      (project-current)
-      (project-root)
-      (kmanifest-read-manifest)
-      (ktest-run-tests)
-      (pop-to-buffer))))
-
-
-
 (provide 'kosz-test)
 
 ;; Local Variables:
