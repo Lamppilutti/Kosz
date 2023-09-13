@@ -37,7 +37,7 @@
 
 
 
-(defun kt--ensure-deps (manifest)
+(defun ktest--ensure-deps (manifest)
   "Ensure all of the dependencies from MANIFEST are installed."
   (setq manifest (cdr manifest))
   (dolist (dependency (plist-get manifest :dependencies))
@@ -46,7 +46,7 @@
                 (t* (not (package-installed-p dependency* min-version))))
       (package-install dependency*))))
 
-(defun kt--collect-tests (manifest)
+(defun ktest--collect-tests (manifest)
   "Return list of test files.
 
 Use MANIFEST for getting information about test files."
@@ -62,7 +62,7 @@ Use MANIFEST for getting information about test files."
                  (equal ".el" (file-name-extension file t)))
         (push file files)))))
 
-(defun kt--collect-src-directories (manifest)
+(defun ktest--collect-src-directories (manifest)
   "Collect src dicrectories.
 
 Use MANIFEST for getting information about src directories."
@@ -79,7 +79,7 @@ Use MANIFEST for getting information about src directories."
         (push (file-name-directory file) directories)))
     (delete-dups directories)))
 
-(defun kt--call-test-process (directory load-directories load-files test-runner)
+(defun ktest--call-test-process (directory load-directories load-files test-runner)
   "Run tests in separate Emacs process.
 
 Tests will runned inside DIRECTORY.  LOAD-DIRECTORIES will added to `load-path'.
@@ -99,7 +99,7 @@ If process ends with error return error message as result."
       (kutils-external-process-error
        (alist-get :output process-error)))))
 
-(defun kt--load-path ()
+(defun ktest--load-path ()
   "Construct the `load-path' for project.
 Load path is based on all of the packages under
 `package-user-dir'."
@@ -107,7 +107,7 @@ Load path is based on all of the packages under
    #'directory-file-name
    (directory-files package-user-dir t directory-files-no-dot-files-regexp)))
 
-(defun kt--package-dir (root)
+(defun ktest--package-dir (root)
   "Format package directory name in project's ROOT."
   (expand-file-name
    (format "kosz-elpa-%s" emacs-version)
@@ -115,7 +115,7 @@ Load path is based on all of the packages under
 
 
 
-(defun kt-run-tests (manifest)
+(defun ktest-run-tests (manifest)
   "Run test described in package MANIFEST.
 
 Return buffer with result of test execution."
@@ -123,18 +123,18 @@ Return buffer with result of test execution."
          (manifest*        (cdr manifest))
          (temp-directory   (kutils-temporary-file-directory))
          (test-runner      (plist-get manifest* :test-runner))
-         (test-files       (kt--collect-tests manifest))
-         (src-directories  (kt--collect-src-directories manifest))
+         (test-files       (ktest--collect-tests manifest))
+         (src-directories  (ktest--collect-src-directories manifest))
          (result-buffer    (generate-new-buffer
                             (format "* Kosz test result %s*" (gensym))))
-         (package-user-dir (kt--package-dir root)))
+         (package-user-dir (ktest--package-dir root)))
     (make-directory temp-directory t)
     (make-directory package-user-dir t)
-    (kt--ensure-deps manifest)
+    (ktest--ensure-deps manifest)
     (with-current-buffer result-buffer
       (insert
-       (kt--call-test-process temp-directory
-                              (append src-directories (kt--load-path))
+       (ktest--call-test-process temp-directory
+                              (append src-directories (ktest--load-path))
                               test-files
                               test-runner))
       (compilation-mode))
@@ -154,7 +154,7 @@ Ask directory of package which tests need to run."
       (project-current)
       (project-root)
       (kmanifest-read-manifest)
-      (kt-run-tests)
+      (ktest-run-tests)
       (pop-to-buffer))))
 
 
@@ -162,7 +162,7 @@ Ask directory of package which tests need to run."
 (provide 'kosz-test)
 
 ;; Local Variables:
-;; read-symbol-shorthands: (("kt-" . "kosz-test-")
+;; read-symbol-shorthands: (("ktest-"     . "kosz-test-")
 ;;                          ("kmanifest-" . "kosz-manifest-")
 ;;                          ("kutils-"    . "kosz-utils-"))
 ;; End:
