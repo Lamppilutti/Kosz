@@ -30,7 +30,6 @@
   (require 'subr-x))
 
 (require 'package)
-(require 'project)
 
 (require 'kosz-manifest)
 (require 'kosz-utils)

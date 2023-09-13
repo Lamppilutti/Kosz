@@ -30,10 +30,7 @@
 (eval-when-compile
   (require 'subr-x))
 
-(require 'package)
 (require 'pp)
-(require 'project)
-(require 'vc)
 
 (require 'kosz-manifest)
 (require 'kosz-utils)
