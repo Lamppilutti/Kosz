@@ -388,19 +388,19 @@ The archive can be founded in @file{build} directory in package root.
 
 The building features are provided as interactive functions.
 
-@kbd{M-x kosz-build-package}
+@kbd{M-x kosz-ui-build-package}
 The function asks path to a package and tryes to build it.
 
-@kbd{M-x kosz-build-vc-package}
+@kbd{M-x kosz-ui-build-vc-package}
 The function asks repository URL, path to directory where place
 builded package, version control system and revision. The revision can
 be empty. Then clone repository and build cloned package.
 
-@kbd{M-x kosz-build-and-install-package}
-Like @code{kosz-build-package} but installs resulted package after.
+@kbd{M-x kosz-ui-build-and-install-package}
+Like @code{kosz-ui-build-package} but installs resulted package after.
 
-@kbd{M-x kosz-build-and-intsll-vc-package}
-Like @code{kosz-build-vc-package} but installs resulted package after.
+@kbd{M-x kosz-ui-build-and-intsll-vc-package}
+Like @code{kosz-ui-build-vc-package} but installs resulted package after.
 
 @c End: Building
 
@@ -410,7 +410,7 @@ Like @code{kosz-build-vc-package} but installs resulted package after.
 
 The testing features are provided as interactive functions.
 
-@kbd{M-x kosz-test-package}
+@kbd{M-x kosz-ui-test-package}
 The function requires defined @code{:tests} and @code{:tests-runner}
 properties in manifest file.
 
