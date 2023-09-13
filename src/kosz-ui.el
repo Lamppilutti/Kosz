@@ -32,6 +32,7 @@
 (require 'cl-generic)
 (require 'package)
 (require 'project)
+(require 'vc)
 
 (require 'kosz-manifest)
 (require 'kosz-build)
