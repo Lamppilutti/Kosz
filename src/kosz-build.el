@@ -54,6 +54,13 @@ Return list of created files."
       (kutils-call-process "install-info" directory file "dir"))
     (kutils-directory-files-recursively directory)))
 
+(defun kbuild--package-full-name (manifest)
+  "Read package full name from MANIFEST.
+
+Package fill name is \\=':name-:version' string."
+  (setq manifest (cdr manifest))
+  (format "%s-%s" (plist-get manifest :name) (plist-get manifest :version)))
+
 (defun kbuild--generate-pkg-file (manifest directory)
   "Generate \\='-pkg.el' file from MANIFEST inside DIRECTORY."
   (let* ((manifest*           (cdr manifest))
@@ -151,31 +158,30 @@ Skip properties what have no use for \\='package.el'."
   "Build tar file for package described in MANIFEST.
 
 Created tar file can be used in by \\='package.el'.  Extracted directory can be
-used in `load-path'."
+used in `load-path'.
+Return path to builded tar file."
   (let* ((root              (car manifest))
-         (manifest*         (cdr manifest))
-         (package-name      (plist-get manifest* :name))
-         (package-version   (plist-get manifest* :version))
-         (package-fullname  (format "%s-%s" package-name package-version))
+         (package-fullname  (kbuild--package-full-name manifest))
          (package-tar-file  (format "%s.tar" package-fullname))
-         (build-directory   (file-name-concat root "build"))
-         (package-directory (thread-last package-fullname
-                                         (file-name-concat build-directory)
-                                         ;; For correct file moving.
-                                         (file-name-as-directory))))
+         (package-directory (file-name-concat root "build" package-fullname))
+         ;; This directory will be packeg in tar and deleted after this.
+         ;; As result there will package-ver/package-ver.tar file.
+         (build-directory   (file-name-as-directory ; For correct file moving.
+                             (file-name-concat package-directory
+                                               package-fullname))))
     (unwind-protect
         (progn
-          (make-directory package-directory t)
-          (kbuild--generate-pkg-file manifest package-directory)
-          (kbuild--copy-src-files manifest package-directory)
-          (kbuild--copy-assets-files manifest package-directory)
-          (kbuild--build-docs manifest package-directory)
-          (kbuild--copy-readme-file manifest package-directory)
-          (kutils-call-process "tar" build-directory
+          (make-directory build-directory t)
+          (kbuild--generate-pkg-file manifest build-directory)
+          (kbuild--copy-src-files manifest build-directory)
+          (kbuild--copy-assets-files manifest build-directory)
+          (kbuild--build-docs manifest build-directory)
+          (kbuild--copy-readme-file manifest build-directory)
+          (kutils-call-process "tar" package-directory
                                "-cf" package-tar-file
                                package-fullname)
-          (expand-file-name package-tar-file build-directory))
-      (delete-directory package-directory t))))
+          (expand-file-name package-tar-file package-directory))
+      (delete-directory build-directory t))))
 
 
 
