@@ -20,8 +20,7 @@
 ;; along with Kosz.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;; Programming and user interfaces for building packages.  Resulted packages can
-;; be loaded by adding to `load-path' or registered by "packege.el".
+;; API for building packages.  Build targets `load-path' and "package.el".
 
 ;;; Code:
 
@@ -31,6 +30,7 @@
   (require 'subr-x))
 
 (require 'pp)
+(require 'seq)
 
 (require 'kosz-manifest)
 (require 'kosz-utils)
@@ -40,7 +40,7 @@
 (defun kbuild--makeinfo(manifest files directory)
   "Build \\='.info' and \\='dir' files from \\='.texi' FILES inside DIRECTORY.
 
-Path MANIFEST properties to
+Create variables from MANIFEST's properties with \\='kosz(:property)' names.
 Return list of created files."
   (setq manifest (cdr manifest))
   (let* ((variable-setters nil))
@@ -63,62 +63,61 @@ Return list of created files."
       (pp-emacs-lisp-code define-package-form)
       (insert "\n;; Local Variables:\n;; no-byte-compile: t\n;; End:\n"))))
 
-(defun kbuild--collect-src (manifest directory)
-  "Copy package's source code files to DIRECTORY.
-
-Use MANIFEST for getting information about source code files."
+(defun kbuild--copy-src-files (manifest directory)
+  "Find listed in MANIFEST src files and copy they to DIRECTORY."
   (let* ((root         (car manifest))
          (manifest*    (cdr manifest))
          (src-includes (thread-first (plist-get manifest* :src)
                                      (kutils-expand-files root)))
          (src-excludes (thread-first (plist-get manifest* :src-exclude)
                                      (kutils-expand-files root))))
-    (dolist (file src-includes)
-      (when (and (not (member file src-excludes))
-                 (equal ".el" (file-name-extension file t)))
+    (dolist (file (seq-difference src-includes src-excludes))
+      (when (string= ".el" (file-name-extension file t))
         (copy-file file directory t)))))
 
-(defun kbuild--collect-assets (manifest directory)
-  "Copy package assets files to DIRECTORY.
-
-Use MANIFEST for getting information about assets files."
+(defun kbuild--copy-assets-files (manifest directory)
+  "Find listed in MANIFEST assets files and copy them to DIRECTORY."
   (let* ((root            (car manifest))
          (manifest*       (cdr manifest))
          (assets-includes (thread-first (plist-get manifest* :assets)
                                         (kutils-expand-files root)))
          (assets-excludes (thread-first (plist-get manifest* :assets-exclude)
                                         (kutils-expand-files root))))
-    (dolist (file assets-includes)
-      (when (not (member file assets-excludes))
-        (thread-last (file-relative-name file root)
-                     (file-name-concat directory)
-                     (kutils-copy-file file))))))
+    (dolist (file (seq-difference assets-includes assets-excludes))
+      (thread-last (file-relative-name file root)
+                   (file-name-concat directory)
+                   (kutils-copy-file file)))))
 
-(defun kbuild--collect-docs (manifest directory)
-  "Compile package \\='.texi' documentation files to DIRECTORY.
+(defun kbuild--build-docs (manifest directory)
+  "Find listed in MANIFEST documentation files and build them in DIRECTORY.
 
-Use MANIFEST for getting information about documentation files."
+Documentation files are \\='.texi' files."
   (let* ((root           (car manifest))
          (manifest*      (cdr manifest))
          (docs-includes  (thread-first (plist-get manifest* :docs)
                                        (kutils-expand-files root)))
          (docs-excludes  (thread-first (plist-get manifest* :docs-exclude)
                                        (kutils-expand-files root)))
+         (docs-files     (thread-last
+                           (seq-difference docs-includes docs-excludes)
+                           (seq-filter
+                            (lambda (file)
+                              (string= ".texi" (file-name-extension file t))))))
          (temp-directory (kutils-temporary-file-directory)))
     (make-directory temp-directory t)
-    (dolist (file docs-includes)
-      (when (or (not (equal ".texi" (file-name-extension file t)))
-                (member file docs-excludes))
-        (setq docs-includes (delete file docs-includes))))
-    (dolist (file (kbuild--makeinfo manifest docs-includes temp-directory))
+    (dolist (file (kbuild--makeinfo manifest docs-files temp-directory))
       (rename-file file directory))))
 
-(defun kbuild--collect-readme (manifest directory)
-  (when-let* ((root         (car manifest))
-              (manifest*    (cdr manifest))
-              (readme-file  (plist-get manifest* :readme))
-              (readme-file* (expand-file-name readme-file root)))
-    (copy-file readme-file (file-name-concat directory "README") t)))
+  (defun kbuild--copy-readme-file (manifest directory)
+    "Find listed in MANIFEST readme file and copy it to DIRECTORY.
+
+Copied will have \\='README' name."
+    (when-let* ((root         (car manifest))
+                (manifest*    (cdr manifest))
+                (readme-file  (plist-get manifest* :readme)))
+      (copy-file (expand-file-name readme-file root)
+                 (file-name-concat directory "README")
+                 t)))
 
 
 
@@ -149,9 +148,10 @@ Skip properties what have no use for \\='package.el'."
           :authors    (kutils-pairs->alist authors))))
 
 (defun kbuild-build (manifest)
-  "Build package tar file from MANIFEST that \\='package.el' understood.
+  "Build tar file for package described in MANIFEST.
 
-The tar file contains directory what can be used in `load-path'."
+Created tar file can be used in by \\='package.el'.  Extracted directory can be
+used in `load-path'."
   (let* ((root              (car manifest))
          (manifest*         (cdr manifest))
          (package-name      (plist-get manifest* :name))
@@ -167,10 +167,10 @@ The tar file contains directory what can be used in `load-path'."
         (progn
           (make-directory package-directory t)
           (kbuild--generate-pkg-file manifest package-directory)
-          (kbuild--collect-src manifest package-directory)
-          (kbuild--collect-assets manifest package-directory)
-          (kbuild--collect-docs manifest package-directory)
-          (kbuild--collect-readme manifest package-directory)
+          (kbuild--copy-src-files manifest package-directory)
+          (kbuild--copy-assets-files manifest package-directory)
+          (kbuild--build-docs manifest package-directory)
+          (kbuild--copy-readme-file manifest package-directory)
           (kutils-call-process "tar" build-directory
                                "-cf" package-tar-file
                                package-fullname)
