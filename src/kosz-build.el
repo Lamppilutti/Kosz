@@ -154,6 +154,19 @@ Skip properties what have no use for \\='package.el'."
           :maintainer (kutils-pair->cons maintainer)
           :authors    (kutils-pairs->alist authors))))
 
+(defun kbuild-build-docs (manifest)
+  "Build package documentation for package described in MANIFEST.
+
+It build \\='.texi' files in \\='.info' files and create \\='dir' file.
+Return path to directory with builded documentation."
+  (let* ((root             (car manifest))
+         (package-fullname (kbuild--package-full-name manifest))
+         (build-directory  (file-name-concat
+                            root "build" package-fullname "docs/")))
+    (make-directory build-directory t)
+    (kbuild--build-docs manifest build-directory)
+    build-directory))
+
 (defun kbuild-build (manifest)
   "Build tar file for package described in MANIFEST.
 
