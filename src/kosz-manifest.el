@@ -33,26 +33,23 @@
 (defconst kmanifest-manifest-file "package.kosz"
   "Manifest file name.")
 
+(defconst kmanifest-dump-file ".manifest-dump"
+  "File for manifest dump.")
 
 
-(defun kmanifest--init-emacs ()
+
+(defun kmanifest--init-emacs (dump-file-name)
   "Return code for initialazing Emacs.
 
-It defines \\='define-package' form and makes shure that result of
-\\='define-package' form will be printed at the same end of Emacs work.
+DUMP-FILE-NAME is file in which dump manifest after reading.
 
-This code should be evaluated before any \\='load'."
+This code should be evaluated before manifest reading."
   `(progn
-     (defvar _define_package_result)
-     (advice-add 'load :after
-                 (lambda (&rest _)
-                   (setq kill-emacs-hook nil)
-                   (prin1 _define_package_result)
-                   (kill-emacs)))
      (defun define-package (name version &rest properties)
        (plist-put properties :name name)
        (plist-put properties :version version)
-       (setq _define_package_result properties))))
+       (with-temp-file ,dump-file-name
+         (insert (format "%S" properties))))))
 
 
 
@@ -137,14 +134,19 @@ the manifest file.
 
 If manifest invalid signal `kosz-manifest-validation-error'."
   (setq directory (expand-file-name directory))
-  (with-temp-buffer
-    (insert (kutils-call-process "emacs" directory
-                             "--batch" "--quick"
-                             "--eval" (format "%S" (kmanifest--init-emacs))
-                             "--load" kmanifest-manifest-file))
-    (kmanifest-validate-manifest
-     (cons (abbreviate-file-name directory)
-           (sexp-at-point)))))
+  (let* ((dump-file (file-name-concat directory kmanifest-dump-file))
+         (init-code (format "%S" (kmanifest--init-emacs dump-file))))
+    (kutils-call-process "emacs" directory
+                         "--batch" "--quick"
+                         "--eval" init-code
+                         "--load" kmanifest-manifest-file)
+    (unwind-protect
+        (with-temp-buffer
+          (insert-file-contents dump-file)
+          (kmanifest-validate-manifest
+           (cons (abbreviate-file-name directory)
+                 (sexp-at-point))))
+      (delete-file dump-file))))
 
 
 
