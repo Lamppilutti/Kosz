@@ -131,7 +131,8 @@ Copied will have \\='README' name."
 (defun kbuild-manifest->define-package (manifest)
   "Return \\='define-package' form generated from MANIFEST.
 
-If MANIFEST extra properties are invalid signal `kosz-utils-validation-error'.
+If MANIFEST extra properties are invalid signal
+`kosz-manifest-manifest-validation-error'.
 Skip properties what have no use for \\='package.el'."
   (setq manifest (cdr manifest))
   (let* ((name         (plist-get manifest :name))

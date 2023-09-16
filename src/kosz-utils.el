@@ -35,49 +35,7 @@
 (define-error 'kutils-external-process-error
   "Externall process ends with error")
 
-(define-error 'kutils-validation-error
-  "Plist has invalid properties")
 
-
-
-(defmacro kutils-plist-validation (plist &rest property-cases)
-  "Utility macros for validate PLIST.
-
-PROPERTY-CASES is a list of (PROPERTY BIND COND MESSAGE) elements.
-PROPERTY is a keyword property from MANIFEST.
-BIND is a symbol to which property value will bind.
-COND is an expression what returns boolean.
-MESSAGE is a string describes what property value is expected.
-
-If COND returns nil then the property name, value and MESSAGE will collected to
-(:property PROPERTY :value PROPERTY's-value :expected MESSAGE) error form.  If
-after checking all PROPERTY-CASES there is one or more error forms then signal
-`kosz-utils-validation-error'.
-
-\(fn PLIST (PROPERTY BIND COND MESSAGE)...)"
-  (declare (indent 1))
-  (let* ((errors-sym (gensym "errors"))
-         (bindings   nil)
-         (cases*     nil))
-    (dolist (case property-cases)
-      (let* ((property         (nth 0 case))
-             (bind             (nth 1 case))
-             (condition        (nth 2 case))
-             (expected-message (nth 3 case)))
-        (push `(,bind (plist-get ,plist ,property))
-              bindings)
-        (push `(unless ,condition
-                 (push (list :property ,property
-                             :value    ,bind
-                             :expected ,expected-message)
-                       ,errors-sym))
-              cases*)))
-    `(let* ((,errors-sym  nil)
-            ,@bindings)
-       ,@cases*
-       (when ,errors-sym
-         (signal 'kutils-validation-error
-                 (list :invalid-properties ,errors-sym))))))
 
 (defun kutils-buffer-string ()
   "Return the content of current buffer as a string without properties."

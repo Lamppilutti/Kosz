@@ -38,6 +38,52 @@
 
 
 
+(define-error 'kmanifest-manifest-validation-error
+  "Manifest has invalid properties")
+
+
+
+(defmacro kmanifest--manifest-validation (manifest &rest property-cases)
+  "Utility macros for validate PLIST.
+
+PROPERTY-CASES is a list of (PROPERTY BIND COND MESSAGE) elements.
+PROPERTY is a keyword property from MANIFEST.
+BIND is a symbol to which property value will bind.
+COND is an expression what returns boolean.
+MESSAGE is a string describes what property value is expected.
+
+If COND returns nil then the property name, value and MESSAGE will collected to
+(:property PROPERTY :value PROPERTY's-value :expected MESSAGE) error form.  If
+after checking all PROPERTY-CASES there is one or more error forms then signal
+`kosz-manifest-manifest-validation-error'.
+
+\(fn PLIST (PROPERTY BIND COND MESSAGE)...)"
+  (declare (indent 1))
+  (let* ((errors-sym (gensym "errors"))
+         (bindings   nil)
+         (cases*     nil))
+    (dolist (case property-cases)
+      (let* ((property         (nth 0 case))
+             (bind             (nth 1 case))
+             (condition        (nth 2 case))
+             (expected-message (nth 3 case)))
+        (push `(,bind (plist-get ,manifest ,property))
+              bindings)
+        (push `(unless ,condition
+                 (push (list :property ,property
+                             :value    ,bind
+                             :expected ,expected-message)
+                       ,errors-sym))
+              cases*)))
+    `(let* ((,errors-sym  nil)
+            ,@bindings)
+       ,@cases*
+       (when ,errors-sym
+         (signal 'kmanifest-manifest-validation-error
+                 (list :invalid-properties ,errors-sym))))))
+
+
+
 (defun kmanifest--init-emacs (dump-file-name)
   "Return code for initialazing Emacs.
 
@@ -57,8 +103,8 @@ This code should be evaluated before manifest reading."
   "Validate MANIFEST properties.
 
 Return MANIFEST if all base properties valid.  Otherwice signal
-`kosz-utils-validation-error'."
-  (kutils-plist-validation (cdr manifest)
+`kosz-manifest-manifest-validation-error'."
+  (kmanifest--manifest-validation (cdr manifest)
     (:name
      name (kutils-symbolp name)
      "Not nil symbol")
