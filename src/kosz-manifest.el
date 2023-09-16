@@ -46,8 +46,8 @@ DUMP-FILE-NAME is file in which dump manifest after reading.
 This code should be evaluated before manifest reading."
   `(progn
      (defun define-package (name version &rest properties)
-       (plist-put properties :name name)
-       (plist-put properties :version version)
+       (setq properties (plist-put properties :name name))
+       (setq properties (plist-put properties :version version))
        (with-temp-file ,dump-file-name
          (insert (format "%S" properties))))))
 
