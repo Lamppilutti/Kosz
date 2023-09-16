@@ -102,57 +102,6 @@ If file is directory then recursively get files of it whithout subdirectories."
         (nconc expanded-files)
         (setq expanded-files)))))
 
-(defun kutils-version-string-p (object)
-  "Return t if OBJECT is string that `version-to-list' understood."
-  (declare (pure t) (side-effect-free t))
-  (condition-case _
-      (version-to-list object)
-    (error nil)))
-
-(defun kutils-not-blank-string-p (object)
-  "Return t if OBJECT is nil or not blank string."
-  (declare (pure t) (side-effect-free t))
-  (or (null object)
-      (and (stringp object)
-           (not (string-blank-p object)))))
-
-(defun kutils-not-blank-string-p* (object)
-  "Return t if OBJECT is not blank string."
-  (declare (pure t) (side-effect-free t))
-  (and (stringp object)
-       (not (string-blank-p object))))
-
-(defun kutils-symbolp (object)
-  "Return t if OBJECT is a symbol, but not nil and not a keyword."
-  (declare (pure t) (side-effect-free t))
-  (and (symbolp object)
-       (not (keywordp object))
-       (not (null object))))
-
-(defun kutils-pairp (object firstp secondp)
-  "Return t if OBJECT is nil or pair.
-
-Check the first element of pair by FIRSTP, and the second by SECONDP.
-
-The pair is list of two elements, for example (1 2)."
-  (declare (pure t) (side-effect-free t))
-  (or (null object)
-      (and (funcall firstp (car object))
-           (funcall secondp (cdar object)))))
-
-(defun kutils-list-of-pairs-p (object firstp secondp)
-  "Return t if OBJECT is nil or a list of pairs.
-
-Check the first element of pair by FIRSTP, and the second by SECONDP.
-
-The pair is list of two elements, for example (1 2)."
-  (declare (pure t) (side-effect-free t))
-  (while (and (consp object)
-              (funcall firstp (caar object))
-              (funcall secondp (cadar object)))
-    (setq object (cdr object)))
-  (null object))
-
 (defun kutils-pair->cons (pair)
   "Return cons created from PAIR.  If PAIR is nil return nil.
 

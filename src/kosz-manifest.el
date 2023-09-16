@@ -81,6 +81,26 @@ after checking all PROPERTY-CASES there is one or more error forms then signal
 
 
 
+(defun kmanifest--pkg-name-p (object)
+  "Return t if OBJECT is not nil and not keyword symbol"
+  (and (symbolp object) (not (keywordp object)) (not (null object))))
+
+(defun kmanifest--versionp (object)
+  "Return t of OBJECT is string that `version-to-list' undertood."
+  (ignore-errors (version-to-list object)))
+
+(defun kmanifest--check-pairs (object firstp secondp)
+  "Return t if OBJECT is a list of pairs or nil.
+
+Check the first element of pair by FIRSTP, and the second by SECONDP.
+
+The pair is list of two elements, for example (1 2)."
+  (while (and (consp object)
+              (funcall firstp (caar object))
+              (funcall secondp (cadar object)))
+    (setq object (cdr object)))
+  (null object))
+
 (defun kmanifest--init-emacs (dump-file-name)
   "Return code for initialazing Emacs.
 
@@ -103,67 +123,68 @@ Return MANIFEST if all base properties valid.  Otherwice signal
 `kosz-manifest-manifest-validation-error'."
   (kmanifest--manifest-validation (cdr manifest)
     (:name
-     (kutils-symbolp it)
-     "Not nil symbol")
+     (kmanifest--pkg-name-p it)
+     "Name must be not nil symbol")
     (:version
-     (kutils-version-string-p it)
-     "String of a form that can be understood by `version-to-list'")
+     (kmanifest--versionp it)
+     "Version must be string that can be understood by `version-to-list'")
     (:description
-     (kutils-not-blank-string-p it)
-     "Not blank string or nil")
+     (or (stringp it) (null it))
+     "Property should be string.")
     (:dependencies
-     (kutils-list-of-pairs-p it #'kutils-symbolp #'kutils-version-string-p)
-     "List of (not nil symbol - `version-to-list' undestandable string) pairs, \
-or nil")
+     (kmanifest--check-pairs it #'kmanifest--pkg-name-p #'kmanifest--versionp)
+     "Property shoud be list of (symbol version-string); \
+Symbol is not nil symbol, version-string is string that can be understood by \
+`version-to-list'")
     (:url
-     (kutils-not-blank-string-p it)
-     "String or nil")
+     (or (stringp it) (null it))
+     "Property should be string")
     (:authors
-     (kutils-list-of-pairs-p
-      it #'kutils-not-blank-string-p* #'kutils-not-blank-string-p*)
-     "List of (not blank string - not blank string) pairs, or nil")
+     (kmanifest--check-pairs it #'stringp #'stringp)
+     "Property should be list of (string string) pairs")
     (:license
-     (kutils-not-blank-string-p it)
-     "Not blank string or nil")
+     (or (stringp it) (null it))
+     "Property should be string")
     (:commit
-     (kutils-not-blank-string-p it)
-     "String or nil")
+     (or (stringp it) (null it))
+     "Property should be string")
     (:keywords
      (list-of-strings-p it)
-     "List of strings or nil")
+     "Property should be list of strings")
     (:maintainer
-     (kutils-pairp it #'kutils-not-blank-string-p* #'kutils-not-blank-string-p*)
-     "Pair of not blank strings or nil")
+     (or (and (length= it 2) (stringp (car it)) (stringp (cadr it)))
+         (null it))
+     "Property should be (string string) pair")
     (:readme
-     (kutils-not-blank-string-p it)
-     "Not blank string or nil")
+     (or (stringp it) (null it))
+     "Property should be string")
     (:src
      (list-of-strings-p it)
-     "List of strings or nil")
+     "Property should be list of strings")
     (:src-exclude
      (list-of-strings-p it)
-     "List of strings or nil")
+     "Property should be list of strings")
     (:docs
      (list-of-strings-p it)
-     "List of strings or nil")
+     "Property should be list of strings")
     (:docs-exclude
      (list-of-strings-p it)
-     "List of strings or nil")
+     "Property should be list of strings")
     (:assets
      (list-of-strings-p it)
-     "List if strings or nil")
+     "Property should be list of strings")
     (:assets-exclide
      (list-of-strings-p it)
-     "List of strings or nil")
+     "Property should be list of strings")
     (:tests
      (list-of-strings-p it)
-     "List of strings or nil")
+     "Property should be list of strings")
     (:tests-exclude
      (list-of-strings-p it)
-     "List of strings or nil")
+     "Property should be list of strings")
     (:test-runner
-     (symbolp it)
-     "Symbol or nil"))
+     (and (symbolp it) (not (keywordp it)))
+     "Property should be symbol"))
   manifest)
 
 (defun kmanifest-read-manifest (directory)
