@@ -153,12 +153,6 @@ The pair is list of two elements, for example (1 2)."
     (setq object (cdr object)))
   (null object))
 
-(defun kutils-functionp (object)
-  "Return t if OBJECT is nil or function."
-  (declare (pure t) (side-effect-free t))
-  (or (null object)
-      (functionp object)))
-
 (defun kutils-pair->cons (pair)
   "Return cons created from PAIR.  If PAIR is nil return nil.
 

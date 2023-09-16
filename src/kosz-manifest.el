@@ -44,12 +44,12 @@
 
 
 (defmacro kmanifest--manifest-validation (manifest &rest property-cases)
-  "Utility macros for validate PLIST.
+  "Utility macros for validate MANIFEST's properties.
 
-PROPERTY-CASES is a list of (PROPERTY BIND COND MESSAGE) elements.
+PROPERTY-CASES is a list of (PROPERTY COND MESSAGE) elements.
 PROPERTY is a keyword property from MANIFEST.
-BIND is a symbol to which property value will bind.
-COND is an expression what returns boolean.
+COND is an expression what returns boolean.  The property value will binded to
+\\=`it' symbol.
 MESSAGE is a string describes what property value is expected.
 
 If COND returns nil then the property name, value and MESSAGE will collected to
@@ -57,27 +57,24 @@ If COND returns nil then the property name, value and MESSAGE will collected to
 after checking all PROPERTY-CASES there is one or more error forms then signal
 `kosz-manifest-manifest-validation-error'.
 
-\(fn PLIST (PROPERTY BIND COND MESSAGE)...)"
+\(fn PLIST (PROPERTY COND MESSAGE)...)"
   (declare (indent 1))
-  (let* ((errors-sym (gensym "errors"))
-         (bindings   nil)
-         (cases*     nil))
-    (dolist (case property-cases)
-      (let* ((property         (nth 0 case))
-             (bind             (nth 1 case))
-             (condition        (nth 2 case))
-             (expected-message (nth 3 case)))
-        (push `(,bind (plist-get ,manifest ,property))
-              bindings)
-        (push `(unless ,condition
-                 (push (list :property ,property
-                             :value    ,bind
-                             :expected ,expected-message)
-                       ,errors-sym))
-              cases*)))
-    `(let* ((,errors-sym  nil)
-            ,@bindings)
-       ,@cases*
+  (let* ((manifest-sym (gensym "manifest"))
+         (errors-sym   (gensym "errors")))
+    `(let* ((,manifest-sym ,manifest)
+            (,errors-sym   nil))
+       ,@(mapcar
+          (lambda (case)
+            (let* ((propertry (nth 0 case))
+                   (condition (nth 1 case))
+                   (error-msg (nth 2 case)))
+              `(let* ((it (plist-get ,manifest-sym ,propertry)))
+                 (unless ,condition
+                   (push (list :property ,propertry
+                               :value it
+                               :expected ,error-msg)
+                         ,errors-sym)))))
+          property-cases)
        (when ,errors-sym
          (signal 'kmanifest-manifest-validation-error
                  (list :invalid-properties ,errors-sym))))))
@@ -106,69 +103,67 @@ Return MANIFEST if all base properties valid.  Otherwice signal
 `kosz-manifest-manifest-validation-error'."
   (kmanifest--manifest-validation (cdr manifest)
     (:name
-     name (kutils-symbolp name)
+     (kutils-symbolp it)
      "Not nil symbol")
     (:version
-     version (kutils-version-string-p version)
+     (kutils-version-string-p it)
      "String of a form that can be understood by `version-to-list'")
     (:description
-     desc (kutils-not-blank-string-p desc)
+     (kutils-not-blank-string-p it)
      "Not blank string or nil")
     (:dependencies
-     deps (kutils-list-of-pairs-p
-           deps #'kutils-symbolp #'kutils-version-string-p)
+     (kutils-list-of-pairs-p it #'kutils-symbolp #'kutils-version-string-p)
      "List of (not nil symbol - `version-to-list' undestandable string) pairs, \
 or nil")
     (:url
-     url (kutils-not-blank-string-p url)
+     (kutils-not-blank-string-p it)
      "String or nil")
     (:authors
-     authors (kutils-list-of-pairs-p
-              authors #'kutils-not-blank-string-p* #'kutils-not-blank-string-p*)
+     (kutils-list-of-pairs-p
+      it #'kutils-not-blank-string-p* #'kutils-not-blank-string-p*)
      "List of (not blank string - not blank string) pairs, or nil")
     (:license
-     license (kutils-not-blank-string-p license)
+     (kutils-not-blank-string-p it)
      "Not blank string or nil")
     (:commit
-     commit (kutils-not-blank-string-p commit)
+     (kutils-not-blank-string-p it)
      "String or nil")
     (:keywords
-     keywords (list-of-strings-p keywords)
+     (list-of-strings-p it)
      "List of strings or nil")
     (:maintainer
-     maintainer (kutils-pairp maintainer
-                              #'kutils-not-blank-string-p*
-                              #'kutils-not-blank-string-p*)
+     (kutils-pairp it #'kutils-not-blank-string-p* #'kutils-not-blank-string-p*)
      "Pair of not blank strings or nil")
     (:readme
-     readme (kutils-not-blank-string-p readme)
+     (kutils-not-blank-string-p it)
      "Not blank string or nil")
     (:src
-     src (list-of-strings-p src)
+     (list-of-strings-p it)
      "List of strings or nil")
     (:src-exclude
-     src-ex (list-of-strings-p src-ex)
+     (list-of-strings-p it)
      "List of strings or nil")
     (:docs
-     docs (list-of-strings-p docs)
+     (list-of-strings-p it)
      "List of strings or nil")
     (:docs-exclude
-     docs-ex (list-of-strings-p docs-ex)
+     (list-of-strings-p it)
      "List of strings or nil")
     (:assets
-     assets (list-of-strings-p assets)
+     (list-of-strings-p it)
      "List if strings or nil")
     (:assets-exclide
-     assets-ex (list-of-strings-p assets-ex)
+     (list-of-strings-p it)
      "List of strings or nil")
     (:tests
-     tests (list-of-strings-p tests)
+     (list-of-strings-p it)
      "List of strings or nil")
     (:tests-exclude
-     tests-ex (list-of-strings-p tests)
+     (list-of-strings-p it)
      "List of strings or nil")
     (:test-runner
-     test-runner (kutils-functionp test-runner)))
+     (symbolp it)
+     "Symbol or nil"))
   manifest)
 
 (defun kmanifest-read-manifest (directory)
