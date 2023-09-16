@@ -143,7 +143,11 @@ Skip properties what have no use for \\='package.el'."
          (commit       (plist-get manifest :commit))
          (keywords     (plist-get manifest :keywords))
          (maintainer   (plist-get manifest :maintainer))
-         (authors      (plist-get manifest :authors)))
+         (maintainer*  (if (not (null maintainer))
+                           (cons (car maintainer) (cadr maintainer))))
+         (authors      (plist-get manifest :authors))
+         (authors*     (mapcar (lambda (pair) (cons (car pair) (cadr pair)))
+                               authors)))
     (list 'define-package
           (format "%s" name)
           version
@@ -152,8 +156,8 @@ Skip properties what have no use for \\='package.el'."
           :url        url
           :commit     commit
           :keywords   keywords
-          :maintainer (kutils-pair->cons maintainer)
-          :authors    (kutils-pairs->alist authors))))
+          :maintainer maintainer*
+          :authors    authors*)))
 
 (defun kbuild-build-docs (manifest)
   "Build package documentation for package described in MANIFEST.

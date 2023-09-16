@@ -102,25 +102,6 @@ If file is directory then recursively get files of it whithout subdirectories."
         (nconc expanded-files)
         (setq expanded-files)))))
 
-(defun kutils-pair->cons (pair)
-  "Return cons created from PAIR.  If PAIR is nil return nil.
-
-The pair is list of two elements, for example (1 2)."
-  (if (null pair)
-      nil
-    (cons (car pair) (cadr pair))))
-
-(defun kutils-pairs->alist (pairs)
-  "Retun alist created from list of PAIRS.
-
-The pair is list of two elements, for example (1 2)."
-  (declare (pure t) (side-effect-free t))
-  (let* ((res nil))
-    (while (consp pairs)
-      (push (cons (caar pairs) (cadar pairs)) res)
-      (pop pairs))
-    (nreverse res)))
-
 
 
 (provide 'kosz-utils)
