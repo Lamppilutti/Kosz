@@ -54,7 +54,7 @@ Ask directory of package for build.  Resulted package will be placed in
       (project-current)
       (project-root)
       (kmanifest-read-manifest)
-      (kbuild-build))))
+      (kbuild-build-package))))
 
 ;;;###autoload
 (defun kosz-ui-build-and-install-package ()
@@ -85,7 +85,7 @@ REVISION of repository.  Revision can be empty."
     (thread-first
       (vc-clone remote backend temp-dir revision)
       (kmanifest-read-manifest)
-      (kbuild-build)
+      (kbuild-build-package)
       (rename-file directory))))
 
 ;;;###autoload
@@ -105,7 +105,7 @@ REVISION can be empty."
     (thread-first
       (vc-clone remote backend temp-dir revision)
       (kmanifest-read-manifest)
-      (kbuild-build)
+      (kbuild-build-package)
       (package-install-file))))
 
 ;;;###autoload

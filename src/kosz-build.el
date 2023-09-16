@@ -172,7 +172,7 @@ Return path to directory with builded documentation."
     (kbuild--build-docs manifest build-directory)
     build-directory))
 
-(defun kbuild-build (manifest)
+(defun kbuild-build-package (manifest)
   "Build tar file for package described in MANIFEST.
 
 Created tar file can be used in by \\='package.el'.  Extracted directory can be
