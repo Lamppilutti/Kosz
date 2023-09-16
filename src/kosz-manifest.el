@@ -20,7 +20,7 @@
 ;; along with Kosz.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary
-;; Programming interface for work with manifest file.
+;; API for working with manifest objects.
 
 ;;; Code:
 
@@ -101,17 +101,17 @@ The pair is list of two elements, for example (1 2)."
     (setq object (cdr object)))
   (null object))
 
-(defun kmanifest--init-emacs (dump-file-name)
+(defun kmanifest--init-emacs (dump-file)
   "Return code for initialazing Emacs.
 
-DUMP-FILE-NAME is file in which dump manifest after reading.
+DUMP-FILE is file in which manifest will be dumped after reading.
 
 This code should be evaluated before manifest reading."
   `(progn
      (defun define-package (name version &rest properties)
        (setq properties (plist-put properties :name name))
        (setq properties (plist-put properties :version version))
-       (with-temp-file ,dump-file-name
+       (with-temp-file ,dump-file
          (insert (format "%S" properties))))))
 
 
@@ -119,8 +119,11 @@ This code should be evaluated before manifest reading."
 (defun kmanifest-validate-manifest (manifest)
   "Validate MANIFEST properties.
 
-Return MANIFEST if all base properties valid.  Otherwice signal
-`kosz-manifest-manifest-validation-error'."
+Return MANIFEST if significant properties are valid.  Otherwice signal
+`kosz-manifest-manifest-validation-error' with
+\(:property \\='property-name'
+  :value    \\='property-value'
+  :expected \\='string-that-described-expected-value') plist as data."
   (kmanifest--manifest-validation (cdr manifest)
     (:name
      (kmanifest--pkg-name-p it)
@@ -192,9 +195,8 @@ Symbol is not nil symbol, version-string is string that can be understood by \
 
 Manifest is (PATH . PLIST) cons, where PATH is path to the directory from
 where the manifest file was readed, and a PLIST is properties readed from
-the manifest file.
-
-If manifest invalid signal `kosz-manifest-validation-error'."
+the manifest file.  Package name and package version are passed as `:name' and
+`:version' respectively."
   (setq directory (expand-file-name directory))
   (let* ((dump-file (file-name-concat directory kmanifest-dump-file))
          (init-code (format "%S" (kmanifest--init-emacs dump-file))))
