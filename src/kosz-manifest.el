@@ -101,6 +101,22 @@ The pair is list of two elements, for example (1 2)."
     (setq object (cdr object)))
   (null object))
 
+(defun kmanifest--valid-file-path-p (object)
+  "Return t if OBJECT is not empty string that isn't \\='.', \\='..' or \\='/'."
+  (and (stringp object)
+       (not (string-empty-p object))
+       (not (string-match-p "^/\\|^\\.\\.?/?$" object))))
+
+(defun kmanifest--list-of-valid-file-paths-p (object)
+  "Return t if OBJECT is nil or list of valid file paths.
+
+See `kosz-manifest--valid-file-path-p'"
+  (while (and (consp object)
+              (stringp (car object))
+              (kmanifest--valid-file-path-p (car object)))
+    (setq object (cdr object)))
+  (null object))
+
 (defun kmanifest--init-emacs (dump-file)
   "Return code for initialazing Emacs.
 
@@ -159,35 +175,45 @@ Symbol is not nil symbol, version-string is string that can be understood by \
          (null it))
      "Property should be (string string) pair")
     (:readme
-     (or (stringp it) (null it))
-     "Property should be string")
+     (or (kmanifest--valid-file-path-p it) (null it))
+     "Property should be path; \
+Path must not be \".\", \"..\" or \"\\\"")
     (:src
-     (list-of-strings-p it)
-     "Property should be list of strings")
+     (kmanifest--list-of-valid-file-paths-p it)
+     "Property should be list of paths; \
+Path must not be \".\", \"..\" or \"\\\"")
     (:src-exclude
-     (list-of-strings-p it)
-     "Property should be list of strings")
+     (kmanifest--list-of-valid-file-paths-p it)
+     "Property should be list of paths; \
+Path must not be \".\", \"..\" or \"\\\"")
     (:docs
-     (list-of-strings-p it)
-     "Property should be list of strings")
+     (kmanifest--list-of-valid-file-paths-p it)
+     "Property should be list of paths; \
+Path must not be \".\", \"..\" or \"\\\"")
     (:docs-exclude
-     (list-of-strings-p it)
-     "Property should be list of strings")
+     (kmanifest--list-of-valid-file-paths-p it)
+     "Property should be list of paths; \
+Path must not be \".\", \"..\" or \"\\\"")
     (:assets
-     (list-of-strings-p it)
-     "Property should be list of strings")
+     (kmanifest--list-of-valid-file-paths-p it)
+     "Property should be list of paths; \
+Path must not be \".\", \"..\" or \"\\\"")
     (:assets-exclide
-     (list-of-strings-p it)
-     "Property should be list of strings")
+     (kmanifest--list-of-valid-file-paths-p it)
+     "Property should be list of paths; \
+Path must not be \".\", \"..\" or \"\\\"")
     (:tests
-     (list-of-strings-p it)
-     "Property should be list of strings")
+     (kmanifest--list-of-valid-file-paths-p it)
+     "Property should be list of paths; \
+Path must not be \".\", \"..\" or \"\\\"")
     (:tests-exclude
-     (list-of-strings-p it)
-     "Property should be list of strings")
+     (kmanifest--list-of-valid-file-paths-p it)
+     "Property should be list of paths; \
+Path must not be \".\", \"..\" or \"\\\"")
     (:test-runner
      (and (symbolp it) (not (keywordp it)))
-     "Property should be symbol"))
+     "Property should be list of paths; \
+Path must not be \".\", \"..\" or \"\\\""))
   manifest)
 
 (defun kmanifest-read-manifest (directory)
