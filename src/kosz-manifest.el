@@ -19,7 +19,7 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with Kosz.  If not, see <https://www.gnu.org/licenses/>.
 
-;;; Commentary
+;;; Commentary:
 ;; API for working with manifest objects.
 
 ;;; Code:
@@ -49,11 +49,11 @@
 PROPERTY-CASES is a list of (PROPERTY COND MESSAGE) elements.
 PROPERTY is a keyword property from MANIFEST.
 COND is an expression what returns boolean.  The property value will binded to
-\\=`it' symbol.
+`it' symbol.
 MESSAGE is a string describes what property value is expected.
 
 If COND returns nil then the property name, value and MESSAGE will collected to
-(:property PROPERTY :value PROPERTY's-value :expected MESSAGE) error form.  If
+\(:property PROPERTY :value PROPERTY's-value :expected MESSAGE) error form.  If
 after checking all PROPERTY-CASES there is one or more error forms then signal
 `kosz-manifest-manifest-validation-error'.
 
@@ -82,15 +82,15 @@ after checking all PROPERTY-CASES there is one or more error forms then signal
 
 
 (defun kmanifest--pkg-name-p (object)
-  "Return t if OBJECT is not nil and not keyword symbol"
+  "Return t if OBJECT is not nil and not keyword symbol."
   (and (symbolp object) (not (keywordp object)) (not (null object))))
 
 (defun kmanifest--versionp (object)
   "Return t of OBJECT is string that `version-to-list' undertood."
   (ignore-errors (version-to-list object)))
 
-(defun kmanifest--check-pairs (object firstp secondp)
-  "Return t if OBJECT is a list of pairs or nil.
+(defun kmanifest--list-of-pairs-p (object firstp secondp)
+  "Return t if OBJECT is nil or a list of pairs.
 
 Check the first element of pair by FIRSTP, and the second by SECONDP.
 
@@ -138,8 +138,8 @@ This code should be evaluated before manifest reading."
 Return MANIFEST if significant properties are valid.  Otherwice signal
 `kosz-manifest-manifest-validation-error' with
 \(:property \\='property-name'
-  :value    \\='property-value'
-  :expected \\='string-that-described-expected-value') plist as data."
+ :value    \\='property-value'
+ :expected \\='string-that-described-expected-value') plist as data."
   (kmanifest--manifest-validation (cdr manifest)
     (:name
      (kmanifest--pkg-name-p it)
@@ -151,7 +151,8 @@ Return MANIFEST if significant properties are valid.  Otherwice signal
      (or (stringp it) (null it))
      "Property should be string.")
     (:dependencies
-     (kmanifest--check-pairs it #'kmanifest--pkg-name-p #'kmanifest--versionp)
+     (kmanifest--list-of-pairs-p it
+                                 #'kmanifest--pkg-name-p #'kmanifest--versionp)
      "Property shoud be list of (symbol version-string); \
 Symbol is not nil symbol, version-string is string that can be understood by \
 `version-to-list'")
@@ -159,7 +160,7 @@ Symbol is not nil symbol, version-string is string that can be understood by \
      (or (stringp it) (null it))
      "Property should be string")
     (:authors
-     (kmanifest--check-pairs it #'stringp #'stringp)
+     (kmanifest--list-of-pairs-p it #'stringp #'stringp)
      "Property should be list of (string string) pairs")
     (:license
      (or (stringp it) (null it))
@@ -219,10 +220,10 @@ Path must not be \".\", \"..\" or \"\\\""))
 (defun kmanifest-read-manifest (directory)
   "Read manifest from DIRECTORY.
 
-Manifest is (PATH . PLIST) cons, where PATH is path to the directory from
-where the manifest file was readed, and a PLIST is properties readed from
-the manifest file.  Package name and package version are passed as `:name' and
-`:version' respectively."
+Manifest is (PATH . PLIST) cons, where PATH is path to the directory from where
+the manifest file was readed, and a PLIST is properties readed from the manifest
+file.  Package name and package version are passed as `:name' and `:version'
+respectively."
   (setq directory (expand-file-name directory))
   (let* ((dump-file (file-name-concat directory kmanifest-dump-file))
          (init-code (format "%S" (kmanifest--init-emacs dump-file))))
