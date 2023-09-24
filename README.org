@@ -27,3 +27,9 @@ For building is needed to eval build.el file.
 It will create build/kosz-*-.tar file. Install it by package.el like
 ~M-x package-install-from-file~ or extract and add extracted directory to
 ~load-path~ list.
+
+
+** License
+Copyright © 2023  Lämppi Lütti <lamppilutti@gmail.com>
+
+Distributed under the GNU General Public License v3.0 or later.
