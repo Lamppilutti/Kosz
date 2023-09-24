@@ -5,7 +5,7 @@ It created to provide the Leiningen like expirience for developing Emacs
 packages with comfortable user interface with interactive functions.
 
 Kosz is not a package manager. It doesn't manages packages and their
-dependencies. It creates tar archives what can be installed by package.el
+dependencies. It creates tar archives what can be installed by ~package.el~.
 
 For information about how to use Kosz read the manual.
 
@@ -19,12 +19,12 @@ info manual. For simplifying the building there is the build.el Emacs Lisp
 script. It will run new Emacs instance, load Kosz core files and build fully
 functional Kosz package.
 
-For building is needed to eval build.el file.
+For building is needed to eval ~build.el~ file.
 
-- From emacs: open build.el file and do ~M-x eval-buffer~.
+- From emacs: open ~build.el~ file and do ~M-x eval-buffer~.
 - From shell: ~$ emacs --batch --quick --script /path/to/build.el~.
 
-It will create build/kosz-*-.tar file. Install it by package.el like
+It will create ~build/kosz-*-.tar~ file. Install it by ~package.el~ like
 ~M-x package-install-from-file~ or extract and add extracted directory to
 ~load-path~ list.
 
