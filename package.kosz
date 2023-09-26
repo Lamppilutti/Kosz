@@ -2,7 +2,7 @@
 
 
 
-(define-package 'kosz "0.10.1"
+(define-package 'kosz "0.11.0"
   :description  "Emacs package builder."
   :dependencies '((emacs "29.1"))
 

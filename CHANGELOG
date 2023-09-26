@@ -2,5 +2,50 @@
 
 * Changelog
 
+** (0.11.0) -- 2023.09.27
+
+*** Added
+- Add ~kosz-build-build-docs~ functions for build ~.texi~ files.
+
+- Download package dependencies for test step.
+
+
+*** Changed
+- Add ~kosz-ui~ feature.
+- Rename ~kosz-build-package~ to ~kosz-ui-build-package~.
+  Move to ~kosz-ui~ feature.
+- Rename ~kosz-build-and-install-package~ to
+  ~kosz-ui-build-and-install-package~.
+  Move to ~kosz-ui~ feature.
+- Rename ~kosz-build-vc-package~ to ~kosz-ui-build-vc-package~.
+  Move to ~kosz-ui~ feature.
+- Rename ~kosz-build-and-install-vc-package~ to
+  ~kosz-ui-build-and-install-vc-package~.
+  Move to ~kosz-ui~ feature.
+- Rename ~kosz-test-package~ to ~kosz-ui-test-package~.
+  Move to ~kosz-ui~ feature.
+
+- Rename ~kosz-build-build~ to ~kosz-build-build-package~.
+
+- Rename ~kosz-utils-validation-error~ to
+  ~kosz-manifest-manifest-validation-error~.
+
+- Put builded packages in ~build/pkgname-pkversion/~ directory.
+
+- Docstrings improvement.
+
+- Code refactor.
+
+
+*** Fixed
+- Fixed uncorrect processing of ~:...-exclude~ properties.
+
+- Fixed error when load unloaded feature in manifest file.
+
+- Fixed error when manifest without named properties is readed as nil.
+
+- Fixed incurrect processing file properties when used ~"."~, ~".."~, ~"/"~ or
+  empty string.
+
 ** (0.10.1) -- 2023.09.13
 Start changelog.
