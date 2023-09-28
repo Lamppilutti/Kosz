@@ -89,15 +89,25 @@ after checking all PROPERTY-CASES there is one or more error forms then signal
   "Return t of OBJECT is string that `version-to-list' undertood."
   (ignore-errors (version-to-list object)))
 
+(defun kmanifest--pair-p (object firstp secondp)
+  "Return t if OBJECT is pair.
+
+Check the first element of pair by FIRSTP, and the second one by SECONDP.
+
+The pair is list of two elements, for example (1 2)."
+  (and (proper-list-p object)
+       (length= object 2)
+       (funcall firstp (car object))
+       (funcall secondp (cadr object))))
+
 (defun kmanifest--list-of-pairs-p (object firstp secondp)
   "Return t if OBJECT is nil or a list of pairs.
 
-Check the first element of pair by FIRSTP, and the second by SECONDP.
+Check the first element of each pair by FIRSTP, and the second one by SECONDP.
 
-The pair is list of two elements, for example (1 2)."
+See `kmanifest--pair-p'."
   (while (and (consp object)
-              (funcall firstp (caar object))
-              (funcall secondp (cadar object)))
+              (kmanifest--pair-p (car object) firstp secondp))
     (setq object (cdr object)))
   (null object))
 
@@ -172,8 +182,7 @@ Symbol is not nil symbol, version-string is string that can be understood by \
      (list-of-strings-p it)
      "Property should be list of strings")
     (:maintainer
-     (or (and (length= it 2) (stringp (car it)) (stringp (cadr it)))
-         (null it))
+     (or (kmanifest--pair-p it #'stringp #'stringp) (null it))
      "Property should be (string string) pair")
     (:readme
      (or (kmanifest--valid-file-path-p it) (null it))
