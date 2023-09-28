@@ -9,19 +9,23 @@
 
 - Download package dependencies for test step.
 
-
 *** Changed
 - Add ~kosz-ui~ feature.
+
 - Rename ~kosz-build-package~ to ~kosz-ui-build-package~.
   Move to ~kosz-ui~ feature.
+
 - Rename ~kosz-build-and-install-package~ to
   ~kosz-ui-build-and-install-package~.
   Move to ~kosz-ui~ feature.
+
 - Rename ~kosz-build-vc-package~ to ~kosz-ui-build-vc-package~.
   Move to ~kosz-ui~ feature.
+
 - Rename ~kosz-build-and-install-vc-package~ to
   ~kosz-ui-build-and-install-vc-package~.
   Move to ~kosz-ui~ feature.
+
 - Rename ~kosz-test-package~ to ~kosz-ui-test-package~.
   Move to ~kosz-ui~ feature.
 
@@ -30,22 +34,23 @@
 - Rename ~kosz-utils-validation-error~ to
   ~kosz-manifest-manifest-validation-error~.
 
+- ~:readme~, ~:src~, ~:src-exclude~, ~:docs~, ~:docs-exclude~, ~:assets~,
+  ~:assets-exclude~, ~:tests~ and ~:test-exclude~ properties should not contains
+  ~.~, ~..~, ~/~ or empty strings.
+
 - Put builded packages in ~build/pkgname-pkversion/~ directory.
 
-- Docstrings improvement.
+- Improve docstrings.
 
-- Code refactor.
-
+- Refactor code.
 
 *** Fixed
-- Fixed uncorrect processing of ~:...-exclude~ properties.
+- Fix error while processing ~:src-exclude~, ~:docs-exclude~, ~:assets-exclude~
+  and ~:test-exclude~ properties.
 
-- Fixed error when load unloaded feature in manifest file.
+- Fix unable to load feature in manifest file.
 
-- Fixed error when manifest without named properties is readed as nil.
-
-- Fixed incurrect processing file properties when used ~"."~, ~".."~, ~"/"~ or
-  empty string.
+- Fix error when manifest without named properties is readed as nil.
 
 ** (0.10.1) -- 2023.09.13
 Start changelog.
