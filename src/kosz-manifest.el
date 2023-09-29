@@ -222,8 +222,7 @@ Path must not be \".\", \"..\" or \"\\\"")
 Path must not be \".\", \"..\" or \"\\\"")
     (:test-runner
      (and (symbolp it) (not (keywordp it)))
-     "Property should be list of paths; \
-Path must not be \".\", \"..\" or \"\\\""))
+     "Property should be not null symbol."))
   manifest)
 
 (defun kmanifest-read-manifest (directory)
