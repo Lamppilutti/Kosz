@@ -124,13 +124,16 @@ Return buffer with result of test execution."
          (test-runner      (plist-get manifest* :test-runner))
          (test-files       (ktest--collect-tests manifest))
          (src-directories  (ktest--collect-src-directories manifest))
-         (result-buffer    (generate-new-buffer
-                            (format "* Kosz test result %s*" (gensym))))
-         (package-user-dir (ktest--package-dir root)))
+         (result-buffer    (get-buffer-create
+                            (format "*Kosz test result for '%s'*"
+                                    (plist-get manifest* :name))))
+         (package-user-dir (ktest--package-dir root))
+         (inhibit-read-only t))
     (make-directory temp-directory t)
     (make-directory package-user-dir t)
     (ktest--ensure-deps manifest)
     (with-current-buffer result-buffer
+      (erase-buffer)
       (insert
        (ktest--call-test-process temp-directory
                               (append src-directories (ktest--load-path))
