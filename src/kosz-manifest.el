@@ -208,7 +208,7 @@ Path must not be \".\", \"..\" or \"\\\"")
      (kmanifest--list-of-valid-file-paths-p it)
      "Property should be list of paths; \
 Path must not be \".\", \"..\" or \"\\\"")
-    (:assets-exclide
+    (:assets-exclude
      (kmanifest--list-of-valid-file-paths-p it)
      "Property should be list of paths; \
 Path must not be \".\", \"..\" or \"\\\"")
