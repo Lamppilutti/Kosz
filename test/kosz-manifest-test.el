@@ -8,7 +8,7 @@
 ;; permitted in any medium without royalty, provided the copyright notice and
 ;; this notice are preserved. This file is offered as-is, without any warranty.
 
-;;; Commentary
+;;; Commentary:
 
 ;;; Code:
 
@@ -33,8 +33,6 @@ Err should be `kosz-manifest-manifest-validation-error'"
      (equal property (plist-get property-info :property)))
    (plist-get (cdr err) :invalid-properties)))
 
-
-
 (defun make-manifest (&rest optional-properties)
   "Return manifest with predefined valid :name and :version properties.
 
@@ -57,7 +55,7 @@ OPTIONAL-PROPERTIES will added to manifest."
 
 
 (ert-deftest kmanifest-validate-manifest:name:version-test-ok ()
-  "Test valid `:name' and `:version' is validated without error."
+  "Test valid `:name' and `:version' are validated without error."
   (should (kmanifest-validate-manifest (make-manifest))))
 
 (ert-deftest kmanifest-validate-manifest:description-test-ok ()
@@ -644,6 +642,8 @@ OPTIONAL-PROPERTIES will added to manifest."
      (should-error (kmanifest-validate-manifest
                     (make-manifest :test-runner :keyword))
                    :type 'kmanifest-manifest-validation-error))))
+
+
 
 (provide 'kosz-manifest-test)
 
