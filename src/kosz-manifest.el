@@ -86,8 +86,10 @@ after checking all PROPERTY-CASES there is one or more error forms then signal
   (and (symbolp object) (not (keywordp object)) (not (null object))))
 
 (defun kmanifest--versionp (object)
-  "Return t of OBJECT is string that `version-to-list' undertood."
-  (ignore-errors (version-to-list object)))
+  "Return t if OBJECT is string that `version-to-list' undertood."
+  (let* ((version-separator    ".")
+         (version-regexp-alist nil))
+    (ignore-errors (version-to-list object))))
 
 (defun kmanifest--pair-p (object firstp secondp)
   "Return t if OBJECT is pair.
@@ -222,7 +224,7 @@ Path must not be \".\", \"..\" or \"\\\"")
 Path must not be \".\", \"..\" or \"\\\"")
     (:test-runner
      (and (symbolp it) (not (keywordp it)))
-     "Property should be not null symbol."))
+     "Property should be not nil symbol."))
   manifest)
 
 (defun kmanifest-read-manifest (directory)
