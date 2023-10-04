@@ -45,7 +45,7 @@
 
 (ert-deftest kbuild-build-docs-test-ok ()
   "Test docs builded without errors."
-  (with-temp-file "docs.texi" "\\INPUT TEXINFO")
+  (make-empty-file "docs.texi" t)
   (let* ((directiry (kbuild-build-docs
                      (cons default-directory (list :name    'test
                                                    :version "1.1.1"
@@ -55,9 +55,9 @@
 
 (ert-deftest kbuild-build-package-test-ok ()
   "Test package builded without errors."
-  (with-temp-file "docs.texi" "\\INPUT TEXINFO")
-  (make-empty-file "readme")
-  (make-empty-file "src.el")
+  (make-empty-file "docs.texi" t)
+  (make-empty-file "readme" t)
+  (make-empty-file "src.el" t)
   (let* ((pkg-file (kbuild-build-package
                     (cons default-directory (list :name    'test
                                                   :version "1.1.1"
