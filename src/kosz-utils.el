@@ -84,7 +84,8 @@ actially file return (FILE) list."
   "Return (almost) unique temporary file name."
   (declare (side-effect-free t))
   (thread-last
-    (time-convert nil 'integer)
+    (time-convert nil 'list)
+    (mapconcat (lambda (elt) (format "%s" elt)))
     (format "temp-%s")
     (file-name-concat (temporary-file-directory))
     (file-name-as-directory)))
