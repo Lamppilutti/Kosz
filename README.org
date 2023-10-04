@@ -9,6 +9,14 @@ dependencies. It creates tar archives what can be installed by ~package.el~.
 
 For information about how to use Kosz read the manual.
 
+
+** Requirements outside Emacs
+Requirements from the system for package working.
+
+- GNU Info - for building .texi manuals.
+- Tar - for packing files (build-in Emacs tar support is very programming
+  unfrendly).
+
 # The end of README if you read this from package-description buffer.
 
 
