@@ -27,11 +27,10 @@
   "Return t if ERR's data has invalid PROPERTY.
 
 Err should be `kosz-manifest-manifest-validation-error'"
-  (declare (indent 1))
   (seq-find
    (lambda (property-info)
-     (equal property (plist-get property-info :property)))
-   (plist-get (cdr err) :invalid-properties)))
+     (equal property (alist-get :property property-info)))
+   (cdr err)))
 
 (defun make-manifest (&rest optional-properties)
   "Return manifest with predefined valid :name and :version properties.

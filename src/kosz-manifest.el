@@ -48,14 +48,16 @@
 
 PROPERTY-CASES is a list of (PROPERTY COND MESSAGE) elements.
 PROPERTY is a keyword property from MANIFEST.
-COND is an expression what returns boolean.  The property value will binded to
-`it' symbol.
+COND is an expression what returns boolean.  The value of the PROPERTY can be
+accessed by `it' symbol insice the expression.
 MESSAGE is a string describes what property value is expected.
 
-If COND returns nil then the property name, value and MESSAGE will collected to
-\(:property PROPERTY :value PROPERTY's-value :expected MESSAGE) error form.  If
-after checking all PROPERTY-CASES there is one or more error forms then signal
-`kosz-manifest-manifest-validation-error'.
+If COND returns nil then it generate
+\((:property . PROPERTY) (:value . PROPERTY's-value) (:expected . MESSAGE))
+ERROR.
+
+Signal `kosz-manifest-manifest-validation-error' with ERROR list as data if
+there are ERRORs at the end of validation.
 
 \(fn PLIST (PROPERTY COND MESSAGE)...)"
   (declare (indent 1))
@@ -65,19 +67,18 @@ after checking all PROPERTY-CASES there is one or more error forms then signal
             (,errors-sym   nil))
        ,@(mapcar
           (lambda (case)
-            (let* ((propertry (nth 0 case))
+            (let* ((property  (nth 0 case))
                    (condition (nth 1 case))
                    (error-msg (nth 2 case)))
-              `(let* ((it (plist-get ,manifest-sym ,propertry)))
+              `(let* ((it (plist-get ,manifest-sym ,property)))
                  (unless ,condition
-                   (push (list :property ,propertry
-                               :value it
-                               :expected ,error-msg)
+                   (push (list (cons :property ,property)
+                               (cons :value    it)
+                               (cons :expected ,error-msg))
                          ,errors-sym)))))
           property-cases)
        (when ,errors-sym
-         (signal 'kmanifest-manifest-validation-error
-                 (list :invalid-properties ,errors-sym))))))
+         (signal 'kmanifest-manifest-validation-error ,errors-sym)))))
 
 
 
