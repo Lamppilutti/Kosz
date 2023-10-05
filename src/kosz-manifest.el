@@ -46,39 +46,53 @@
 (defmacro kmanifest--manifest-validation (manifest &rest property-cases)
   "Utility macros for validate MANIFEST's properties.
 
-PROPERTY-CASES is a list of (PROPERTY COND MESSAGE) elements.
-PROPERTY is a keyword property from MANIFEST.
-COND is an expression what returns boolean.  The value of the PROPERTY can be
-accessed by `it' symbol insice the expression.
+PROPERTY-CASES is a list of (PROPERTY CONDITION MESSAGE) elements.
+PROPERTY is a property from MANIFEST, what need to validate.
+CONDITION is an expression what returns boolean.  The value of the PROPERTY can
+be accessed by `it' symbol inside the expression.
 MESSAGE is a string describes what property value is expected.
 
-If COND returns nil then it generate
-\((:property . PROPERTY) (:value . PROPERTY's-value) (:expected . MESSAGE))
+If CONDITION returns nil then it generates
+\((:property . PROPERTY) (:value . PROPERTY's-value) (:description . MESSAGE))
 ERROR.
 
-Signal `kosz-manifest-manifest-validation-error' with ERROR list as data if
+If some property listed more then once in manifest then it generates
+\((:property . PROPERTY) (:description . \"Property is dublicated.\")) ERROR.
+
+Signal `kosz-manifest-manifest-validation-error' with list of ERRORs as data if
 there are ERRORs at the end of validation.
 
-\(fn PLIST (PROPERTY COND MESSAGE)...)"
+\(fn PLIST (PROPERTY CONDITION MESSAGE)...)"
   (declare (indent 1))
-  (let* ((manifest-sym (gensym "manifest"))
-         (errors-sym   (gensym "errors")))
-    `(let* ((,manifest-sym ,manifest)
-            (,errors-sym   nil))
+  (let* ((manifest-sym  (gensym "manifest"))
+         (processed-sym (gensym "processed"))
+         (errors-sym    (gensym "errors")))
+    `(let* ((,manifest-sym  ,manifest)
+            (,processed-sym nil)
+            (,errors-sym    (make-hash-table)))
        ,@(mapcar
           (lambda (case)
             (let* ((property  (nth 0 case))
                    (condition (nth 1 case))
                    (error-msg (nth 2 case)))
-              `(let* ((it (plist-get ,manifest-sym ,property)))
-                 (unless ,condition
-                   (push (list (cons :property ,property)
-                               (cons :value    it)
-                               (cons :expected ,error-msg))
-                         ,errors-sym)))))
+              `(let* ((it (plist-get ,manifest ,property)))
+                 (cond
+                  ((member ,property ,processed-sym)
+                   (puthash ,property
+                            (list (cons :property    ,property)
+                                  (cons :description "Property is dublicated"))
+                            ,errors-sym))
+                  ((not ,condition)
+                   (puthash ,property
+                            (list (cons :property    ,property)
+                                  (cons :value       it)
+                                  (cons :description ,error-msg))
+                            ,errors-sym)))
+                 (push ,property ,processed-sym))))
           property-cases)
-       (when ,errors-sym
-         (signal 'kmanifest-manifest-validation-error ,errors-sym)))))
+       (when (< 0 (hash-table-count ,errors-sym))
+         (signal 'kmanifest-manifest-validation-error
+                 (hash-table-values ,errors-sym))))))
 
 
 
