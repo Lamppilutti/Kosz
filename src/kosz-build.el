@@ -37,6 +37,11 @@
 
 
 
+(define-error 'kbuild-build-error
+  "Failed to build package")
+
+
+
 (defun kbuild--makeinfo(manifest files directory)
   "Build \\='.info' and \\='dir' files from \\='.texi' FILES inside DIRECTORY.
 
@@ -115,16 +120,18 @@ Documentation files are \\='.texi' files."
     (dolist (file (kbuild--makeinfo manifest docs-files temp-directory))
       (rename-file file directory))))
 
-  (defun kbuild--copy-readme-file (manifest directory)
-    "Find listed in MANIFEST readme file and copy it to DIRECTORY.
+(defun kbuild--copy-readme-file (manifest directory)
+  "Find listed in MANIFEST readme file and copy it to DIRECTORY as \"README\".
 
-Copied will have \\='README' name."
-    (when-let* ((root         (car manifest))
-                (manifest*    (cdr manifest))
-                (readme-file  (plist-get manifest* :readme)))
-      (copy-file (expand-file-name readme-file root)
-                 (file-name-concat directory "README")
-                 t)))
+Signal `kosz-build-build-error' if listed file is directory."
+  (when-let* ((root         (car manifest))
+              (manifest*    (cdr manifest))
+              (readme-file  (plist-get manifest* :readme))
+              (readme-file* (expand-file-name readme-file root)))
+    (if (file-regular-p readme-file*)
+        (copy-file readme-file* (file-name-concat directory "README"))
+      (signal 'kbuild-build-error
+              (list ":readme file is directory" readme-file*)))))
 
 
 
