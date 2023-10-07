@@ -154,7 +154,7 @@ Skip properties what have no use for \"package.el\"."
             (:keywords     keywords)
             (:maintainer   maintainer)
             (:authors      authors))
-      manifest
+      (kmanifest-validate-manifest manifest)
     (list 'define-package
           (format "%s" name)
           version
