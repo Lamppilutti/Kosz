@@ -129,7 +129,7 @@ See `kmanifest--pair-p'."
   (null object))
 
 (defun kmanifest--valid-file-path-p (object)
-  "Return t if OBJECT is not empty string that isn't \\='.', \\='..' or \\='/'."
+  "Return t if OBJECT is not empty string that isn't \".\", \"..\" or \"/\"."
   (and (stringp object)
        (not (string-empty-p object))
        (not (string-match-p "^/\\|^\\.\\.?/?$" object))))
