@@ -33,13 +33,16 @@
 (defconst kmanifest-manifest-file "package.kosz"
   "Manifest file name.")
 
-(defconst kmanifest-dump-file ".manifest-dump"
+(defconst kmanifest--dump-file ".manifest-dump"
   "File for manifest dump.")
 
 
 
 (define-error 'kmanifest-manifest-validation-error
   "Manifest has invalid properties")
+
+(define-error 'kmanifest-manifest-read-manifest-error
+  "Error while manifest reading")
 
 
 
@@ -250,18 +253,19 @@ the manifest file was readed, and a PLIST is properties readed from the manifest
 file.  Package name and package version are passed as `:name' and `:version'
 respectively."
   (setq directory (expand-file-name directory))
-  (let* ((dump-file (file-name-concat directory kmanifest-dump-file))
+  (let* ((dump-file (file-name-concat directory kmanifest--dump-file))
          (init-code (format "%S" (kmanifest--init-emacs dump-file))))
     (kutils-call-process "emacs" directory
                          "--batch" "--quick"
                          "--eval" init-code
                          "--load" kmanifest-manifest-file)
     (unwind-protect
-        (with-temp-buffer
-          (insert-file-contents dump-file)
-          (kmanifest-validate-manifest
-           (cons (abbreviate-file-name directory)
-                 (sexp-at-point))))
+        (condition-case read-error
+            (with-temp-buffer
+              (insert-file-contents dump-file)
+              (kmanifest-validate-manifest
+               (cons (abbreviate-file-name directory) (sexp-at-point))))
+          (error (signal 'kmanifest-read-manifest-error (cdr read-error))))
       (delete-file dump-file))))
 
 
