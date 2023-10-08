@@ -116,8 +116,7 @@ Signal `kosz-build-build-error' if listed file is directory."
                                           (expand-file-name root))))
     (if (file-regular-p readme-file)
         (copy-file readme-file (file-name-concat directory "README"))
-      (signal 'kbuild-build-error
-              (list ":readme file is directory" readme-file)))))
+      (error (list ":readme file is directory" readme-file)))))
 
 (defun kbuild--build-docs (manifest directory)
   "Find listed in MANIFEST \".texi\" files and build them in DIRECTORY."
@@ -173,21 +172,26 @@ Skip properties what have no use for \"package.el\"."
   "Build package documentation for package described in MANIFEST.
 
 It builds \".texi\" files to \".info\" files and create \"dir\" file.
+Signal `kosz-build-build-error' If error cases while building.
 
 Return path to directory with builded documentation."
   (let* ((root             (car manifest))
          (package-fullname (kbuild--package-full-name manifest))
          (build-directory  (file-name-concat
                             root "build" package-fullname "docs/")))
-    (make-directory build-directory t)
-    (kbuild--build-docs manifest build-directory)
-    build-directory))
+    (condition-case build-error
+        (progn
+          (make-directory build-directory t)
+          (kbuild--build-docs manifest build-directory)
+          build-directory)
+      (error (signal 'kbuild-build-error (cdr build-error))))))
 
 (defun kbuild-build-package (manifest)
   "Build tar file for package described in MANIFEST.
 
 Created tar file can be used by \"package.el\".  Extracted from tar directory
 can be used in `load-path'.
+Signal `kosz-build-build-error' If error cases while building.
 
 Return path to created tar file."
   (let* ((root              (car manifest))
@@ -198,17 +202,19 @@ Return path to created tar file."
                              (file-name-concat package-directory
                                                package-fullname))))
     (unwind-protect
-        (progn
-          (make-directory build-directory t)
-          (kbuild--generate-pkg-file manifest build-directory)
-          (kbuild--copy-src-files manifest build-directory)
-          (kbuild--copy-assets-files manifest build-directory)
-          (kbuild--copy-readme-file manifest build-directory)
-          (kbuild--build-docs manifest build-directory)
-          (kutils-call-process "tar" package-directory
-                               "-cf" package-tar-file
-                               package-fullname)
-          (expand-file-name package-tar-file package-directory))
+        (condition-case build-error
+            (progn
+              (make-directory build-directory t)
+              (kbuild--generate-pkg-file manifest build-directory)
+              (kbuild--copy-src-files manifest build-directory)
+              (kbuild--copy-assets-files manifest build-directory)
+              (kbuild--copy-readme-file manifest build-directory)
+              (kbuild--build-docs manifest build-directory)
+              (kutils-call-process "tar" package-directory
+                                   "-cf" package-tar-file
+                                   package-fullname)
+              (expand-file-name package-tar-file package-directory))
+          (error (signal 'kbuild-build-error (cdr build-error))))
       (delete-directory build-directory t))))
 
 
