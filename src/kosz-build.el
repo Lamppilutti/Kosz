@@ -143,7 +143,6 @@ Signal `kosz-build-build-error' if listed file is directory."
 If MANIFEST extra properties are invalid signal
 `kosz-manifest-manifest-validation-error'.
 Skip properties what have no use for \"package.el\"."
-  (setq manifest (cdr manifest))
   (map-let ((:name         name)
             (:version      version)
             (:description  description)
@@ -153,7 +152,7 @@ Skip properties what have no use for \"package.el\"."
             (:keywords     keywords)
             (:maintainer   maintainer)
             (:authors      authors))
-      (kmanifest-validate-manifest manifest)
+      (cdr (kmanifest-validate-manifest manifest))
     (list 'define-package
           (format "%s" name)
           version
