@@ -49,11 +49,10 @@
 Variables has \"kosz(:property-name)\" names and relevant values from MANIFEST."
   (setq manifest (cdr manifest))
   (flatten-list
-   (map-apply (lambda (key value)
-                (list "-D" (format "kosz(%s) %s" key value)))
+   (map-apply (lambda (key value) (list "-D" (format "kosz(%s) %s" key value)))
               manifest)))
 
-(defun kbuild--makeinfo(manifest directory files)
+(defun kbuild--makeinfo (manifest directory files)
   "Build \".info\" and \"dir\" files from \".texi\" FILES inside DIRECTORY.
 
 Pass MANIFEST properties to makeinfo as \"kosz(:property-name)\" variables.
@@ -89,9 +88,10 @@ Package full name is \"name-version\" string, like \"kosz-1.1.1\"."
                                      (kutils-expand-files root)))
          (src-excludes (thread-first (plist-get manifest* :src-exclude)
                                      (kutils-expand-files root))))
-    (dolist (file (seq-difference src-includes src-excludes))
-      (when (string= ".el" (file-name-extension file t))
-        (copy-file file directory)))))
+    (thread-last
+      (seq-difference src-includes src-excludes)
+      (seq-filter (lambda (file) (string= ".el" (file-name-extension file t))))
+      (mapc (lambda (file) (copy-file file directory))))))
 
 (defun kbuild--copy-assets-files (manifest directory)
   "Find listed in MANIFEST assets files and copy them to DIRECTORY."
@@ -110,10 +110,10 @@ Package full name is \"name-version\" string, like \"kosz-1.1.1\"."
   "Find listed in MANIFEST readme file and copy it to DIRECTORY as \"README\".
 
 Signal `kosz-build-build-error' if listed file is directory."
-  (when-let* ((root         (car manifest))
-              (manifest*    (cdr manifest))
-              (readme-file  (thread-first (plist-get manifest* :readme)
-                                          (expand-file-name root))))
+  (when-let* ((root        (car manifest))
+              (manifest*   (cdr manifest))
+              (readme-file (thread-first (plist-get manifest* :readme)
+                                         (expand-file-name root))))
     (if (file-regular-p readme-file)
         (copy-file readme-file (file-name-concat directory "README"))
       (error (list ":readme file is directory" readme-file)))))
@@ -133,7 +133,7 @@ Signal `kosz-build-build-error' if listed file is directory."
       (seq-filter (lambda (file)
                     (string= ".texi" (file-name-extension file t))))
       (kbuild--makeinfo manifest temp-directory)
-      (seq-do (lambda (file) (rename-file file directory))))))
+      (mapc (lambda (file) (rename-file file directory))))))
 
 
 
