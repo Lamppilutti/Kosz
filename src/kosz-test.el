@@ -20,7 +20,7 @@
 ;; along with Kosz.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;; User interfaces for runing tests.
+;; API for working with tests.
 
 ;;; Code:
 
@@ -30,111 +30,102 @@
   (require 'subr-x))
 
 (require 'package)
+(require 'seq)
 
 (require 'kosz-manifest)
 (require 'kosz-utils)
 
 
 
-(defun ktest--ensure-deps (manifest)
-  "Ensure all of the dependencies from MANIFEST are installed."
-  (setq manifest (cdr manifest))
-  (dolist (dependency (plist-get manifest :dependencies))
-    (when-let* ((dependency* (car dependency))
-                (min-version (version-to-list (cadr dependency)))
-                (t* (not (package-installed-p dependency* min-version))))
-      (package-install dependency*))))
-
-(defun ktest--collect-tests (manifest)
-  "Return list of test files.
-
-Use MANIFEST for getting information about test files."
+(defun ktest--get-tests (manifest)
+  "Find listed in MANIFEST test files."
   (let* ((root           (car manifest))
          (manifest*      (cdr manifest))
          (tests-includes (thread-first (plist-get manifest* :tests)
                                        (kutils-expand-files root)))
          (tests-excludes (thread-first (plist-get manifest* :tests-exclude)
-                                       (kutils-expand-files root)))
-         (files          nil))
-    (dolist (file tests-includes files)
-      (when (and (not (member file tests-excludes))
-                 (equal ".el" (file-name-extension file t)))
-        (push file files)))))
+                                       (kutils-expand-files root))))
+    (thread-last
+      (seq-difference tests-includes tests-excludes)
+      (seq-filter (lambda (file)
+                    (string= ".el" (file-name-extension file t)))))))
 
-(defun ktest--collect-src-directories (manifest)
-  "Collect src dicrectories.
-
-Use MANIFEST for getting information about src directories."
+(defun ktest--get-src-directories (manifest)
+  "Find listed in MANIFEST directories with source code."
   (let* ((root         (car manifest))
          (manifest*    (cdr manifest))
          (src-includes (thread-first (plist-get manifest* :src)
                                      (kutils-expand-files root)))
          (src-excludes (thread-first (plist-get manifest* :src-exclude)
-                                     (kutils-expand-files root)))
-         (directories  nil))
-    (dolist (file src-includes)
-      (when (and (not (member file src-excludes))
-                 (equal ".el" (file-name-extension file t)))
-        (push (file-name-directory file) directories)))
-    (delete-dups directories)))
+                                     (kutils-expand-files root))))
+    (thread-last
+      (seq-difference src-includes src-excludes)
+      (seq-filter (lambda (file) (string= ".el" (file-name-extension file t))))
+      (mapcar #'file-name-directory)
+      (delete-dups))))
 
-(defun ktest--call-test-process (directory load-directories load-files test-runner)
+(defun ktest--get-dependencies (manifest)
+  "Install listed in MANIFEST dependencies and return directories of them."
+  (let* ((root             (car manifest))
+         (manifest*        (cdr manifest))
+         (dependencies     (plist-get manifest* :dependencies))
+         (package-user-dir (file-name-concat root "build/dependencies")))
+    (make-directory package-user-dir t)
+    (dolist (dependency dependencies)
+      (when-let* ((pkg-name    (car dependency))
+                  (pkg-version (version-to-list (cadr dependency)))
+                  (t* (not (package-installed-p pkg-name pkg-version))))
+        (package-install pkg-name)))
+    (mapcar #'directory-file-name
+            (directory-files package-user-dir t
+                             directory-files-no-dot-files-regexp))))
+
+(defun ktest--call-test-process (directory directories files test-runner)
   "Run tests in separate Emacs process.
 
-Tests will runned inside DIRECTORY.  LOAD-DIRECTORIES will added to `load-path'.
-LOAD-FILES will loaded by `load'.  TEST-RUNNER will called after loading
-LOAD-DIRECTOIES and LOAD-FILES.
+Tests will runned inside DIRECTORY.  DIRECTORIES will added to `load-path'.
+FILES will loaded by `load'.  TEST-RUNNER function will called after loading
+DIRECTOIES and FILES, it should exit Emacs after work.
 
 If process ends with error return error message as result."
   (let* ((--directories (mapcan (lambda (dir) (list "--directory" dir))
-                                load-directories))
-         (--load        (mapcan (lambda (file) (list "--load" file))
-                                load-files))
+                                directories))
+         (--load        (mapcan (lambda (file) (list "--load" file)) files))
          (--funcall     (list "--funcall" (format "%s" test-runner))))
     (condition-case process-error
         (apply #'kutils-call-process "emacs" directory
                "--batch" "--quick"
-               (nconc --directories --load --funcall)) ; Order is important.
+               (append --directories --load --funcall)) ; Order is important.
       (kutils-external-process-error
        (alist-get :output process-error)))))
-
-(defun ktest--load-path ()
-  "Construct the `load-path' for project.
-Load path is based on all of the packages under
-`package-user-dir'."
-  (mapcar
-   #'directory-file-name
-   (directory-files package-user-dir t directory-files-no-dot-files-regexp)))
 
 
 
 (defun ktest-run-tests (manifest)
-  "Run test described in package MANIFEST.
+  "Run tests described in package MANIFEST.
 
 Return buffer with result of test execution."
-  (let* ((root             (car manifest))
-         (manifest*        (cdr manifest))
-         (temp-directory   (kutils-temporary-file-directory))
-         (test-runner      (plist-get manifest* :test-runner))
-         (test-files       (ktest--collect-tests manifest))
-         (src-directories  (ktest--collect-src-directories manifest))
-         (result-buffer    (get-buffer-create
-                            (format "*Kosz test result for '%s'*"
-                                    (plist-get manifest* :name))))
-         (package-user-dir (file-name-concat root "build/dependencies"))
+  (setq manifest (cdr manifest))
+  (let* ((test-runner            (plist-get manifest :test-runner))
+         (test-files             (ktest--get-tests manifest))
+         (src-directories        (ktest--get-src-directories manifest))
+         (dependency-directories (ktest--get-dependencies manifest))
+         (result-buffer          (thread-last
+                                   (plist-get manifest :name)
+                                   (format "*Kosz test reuslt: '%s'")
+                                   (get-buffer-create)))
+         (temp-directory         (kutils-temporary-file-directory))
          (inhibit-read-only t))
-    (make-directory package-user-dir t)
     (make-directory temp-directory t)
-    (ktest--ensure-deps manifest)
     (with-current-buffer result-buffer
       (erase-buffer)
       (insert
-       (ktest--call-test-process temp-directory
-                              (append src-directories (ktest--load-path))
-                              test-files
-                              test-runner))
-      (compilation-mode))
-    result-buffer))
+       (ktest--call-test-process
+        temp-directory
+        (append dependency-directories src-directories)
+        test-files
+        test-runner))
+      result-buffer)))
 
 
 
