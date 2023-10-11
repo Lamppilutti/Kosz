@@ -106,12 +106,6 @@ Load path is based on all of the packages under
    #'directory-file-name
    (directory-files package-user-dir t directory-files-no-dot-files-regexp)))
 
-(defun ktest--package-dir (root)
-  "Format package directory name in project's ROOT."
-  (expand-file-name
-   (format "kosz-elpa-%s" emacs-version)
-   root))
-
 
 
 (defun ktest-run-tests (manifest)
@@ -127,10 +121,10 @@ Return buffer with result of test execution."
          (result-buffer    (get-buffer-create
                             (format "*Kosz test result for '%s'*"
                                     (plist-get manifest* :name))))
-         (package-user-dir (ktest--package-dir root))
+         (package-user-dir (file-name-concat root "build/dependencies"))
          (inhibit-read-only t))
-    (make-directory temp-directory t)
     (make-directory package-user-dir t)
+    (make-directory temp-directory t)
     (ktest--ensure-deps manifest)
     (with-current-buffer result-buffer
       (erase-buffer)
