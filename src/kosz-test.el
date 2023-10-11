@@ -118,6 +118,7 @@ Return buffer with result of test execution."
          (inhibit-read-only t))
     (make-directory temp-directory t)
     (with-current-buffer result-buffer
+      (when (not (equal 'compilation-mode major-mode)) (compilation-mode))
       (erase-buffer)
       (insert
        (ktest--call-test-process
