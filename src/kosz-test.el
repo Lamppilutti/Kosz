@@ -37,6 +37,11 @@
 
 
 
+(define-error 'ktest-test-error
+  "Error while running tests")
+
+
+
 (defun ktest--get-tests (manifest)
   "Find listed in MANIFEST test files."
   (let* ((root           (car manifest))
@@ -106,27 +111,28 @@ If process ends with error return error message as result."
 
 Return buffer with result of test execution."
   (setq manifest (cdr manifest))
-  (let* ((test-runner            (plist-get manifest :test-runner))
-         (test-files             (ktest--get-tests manifest))
-         (src-directories        (ktest--get-src-directories manifest))
-         (dependency-directories (ktest--get-dependencies manifest))
-         (result-buffer          (thread-last
-                                   (plist-get manifest :name)
-                                   (format "*Kosz test reuslt: '%s'")
-                                   (get-buffer-create)))
-         (temp-directory         (kutils-temporary-file-directory))
+  (let* ((test-runner       (plist-get manifest :test-runner))
+         (test-files        (ktest--get-tests manifest))
+         (src-directories   (ktest--get-src-directories manifest))
+         (result-buffer     (thread-last (plist-get manifest :name)
+                                         (format "*Kosz test reuslt: '%s'")
+                                         (get-buffer-create)))
+         (temp-directory    (kutils-temporary-file-directory))
          (inhibit-read-only t))
-    (make-directory temp-directory t)
-    (with-current-buffer result-buffer
-      (when (not (equal 'compilation-mode major-mode)) (compilation-mode))
-      (erase-buffer)
-      (insert
-       (ktest--call-test-process
-        temp-directory
-        (append dependency-directories src-directories)
-        test-files
-        test-runner))
-      result-buffer)))
+    (condition-case test-error
+        (progn
+          (make-directory temp-directory t)
+          (with-current-buffer result-buffer
+            (when (not (equal 'compilation-mode major-mode)) (compilation-mode))
+            (erase-buffer)
+            (insert
+             (ktest--call-test-process
+              temp-directory
+              (append (ktest--get-dependencies manifest) src-directories)
+              test-files
+              test-runner))
+            (current-buffer)))
+      (error (signal 'ktest-test-error (cdr test-error))))))
 
 
 
