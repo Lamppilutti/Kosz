@@ -150,13 +150,12 @@ If process ends with error return error message as result."
 
 Return buffer with result of test execution."
   (setq manifest (cdr manifest))
-  (let* ((test-runner       (plist-get manifest :test-runner))
-         (test-files        (ktest--get-tests manifest))
-         (src-directories   (ktest--get-src-directories manifest))
-         (result-buffer     (thread-last (plist-get manifest :name)
-                                         (format "*Kosz test reuslt: '%s'")
-                                         (get-buffer-create)))
-         (temp-directory    (kutils-temporary-file-directory))
+  (let* ((test-runner     (plist-get manifest :test-runner))
+         (test-files      (ktest--get-tests manifest))
+         (src-directories (ktest--get-src-directories manifest))
+         (result-buffer   (format "*Kosz test reuslt: '%s'"
+                                  (plist-get manifest :name)))
+         (temp-directory  (kutils-temporary-file-directory))
          (inhibit-read-only t))
     (condition-case test-error
         (progn
