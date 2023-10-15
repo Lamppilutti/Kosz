@@ -29,8 +29,10 @@
 (eval-when-compile
   (require 'subr-x))
 
+(require 'checkdoc)
 (require 'package)
 (require 'seq)
+(require 'warnings)
 
 (require 'kosz-manifest)
 (require 'kosz-utils)
@@ -55,8 +57,8 @@
       (seq-filter (lambda (file)
                     (string= ".el" (file-name-extension file t)))))))
 
-(defun ktest--get-src-directories (manifest)
-  "Find listed in MANIFEST directories with source code."
+(defun ktest--get-src-files (manifest)
+  "Find listed in MANIFEST source code files."
   (let* ((root         (car manifest))
          (manifest*    (cdr manifest))
          (src-includes (thread-first (plist-get manifest* :src)
@@ -65,9 +67,15 @@
                                      (kutils-expand-files root))))
     (thread-last
       (seq-difference src-includes src-excludes)
-      (seq-filter (lambda (file) (string= ".el" (file-name-extension file t))))
-      (mapcar #'file-name-directory)
-      (delete-dups))))
+      (seq-filter (lambda (file)
+                    (string= ".el" (file-name-extension file t)))))))
+
+(defun ktest--get-src-directories (manifest)
+  "Find listed in MANIFEST directories what contains source code files."
+  (thread-last
+    (ktest--get-src-files manifest)
+    (mapcar #'file-name-directory)
+    (delete-dups)))
 
 (defun ktest--get-dependencies (manifest)
   "Install listed in MANIFEST dependencies and return directories of them."
@@ -84,6 +92,13 @@
     (mapcar #'directory-file-name
             (directory-files package-user-dir t
                              directory-files-no-dot-files-regexp))))
+
+(defun ktest--checkdock-file (file)
+  ;; Do what `checkdoc-file' does, but without shadowing
+  ;; `checkdoc-diagnostic-buffer' variable.
+  "Check FILE for document, comment, error style, and rogue spaces."
+  (with-current-buffer (find-file-noselect file)
+    (checkdoc-current-buffer t)))
 
 (defun ktest--call-test-process (directory directories files test-runner)
   "Run tests in separate Emacs process.
@@ -105,6 +120,30 @@ If process ends with error return error message as result."
        (alist-get :output process-error)))))
 
 
+
+(defun ktest-run-diagnostics (manifest)
+  "Run diagnostics for project described in MANIFEST."
+  (let* ((manifest*     (cdr manifest))
+         (src-files     (ktest--get-src-files manifest))
+         (result-buffer (format "*Kosz diagnostic for: '%s'*"
+                                (plist-get manifest* :name)))
+         (byte-compile-dest-file-function #'ignore)
+         (warning-minimum-level           :emergency)
+         (display-buffer-alist            (list
+                                           (list result-buffer
+                                                 #'display-buffer-no-window
+                                                 '(allow-no-window t))))
+         (byte-compile-log-buffer         result-buffer)
+         (checkdoc-diagnostic-buffer      result-buffer)
+         (inhibit-read-only               t))
+    (with-current-buffer (get-buffer-create result-buffer)
+      (erase-buffer)
+      (mapc #'byte-compile-file src-files)
+      (mapc #'ktest--checkdock-file src-files)
+      (delete-non-matching-lines "^.*.el:[[:digit:]]+:" (point-min) (point-max))
+      (emacs-lisp-compilation-mode)
+      (goto-char (point-min))
+      (current-buffer))))
 
 (defun ktest-run-tests (manifest)
   "Run tests described in package MANIFEST.
