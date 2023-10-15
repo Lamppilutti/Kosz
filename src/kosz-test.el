@@ -177,9 +177,8 @@ Return buffer with result of test execution."
 (provide 'kosz-test)
 
 ;; Local Variables:
-;; read-symbol-shorthands: (("ktest-"     . "kosz-test-")
-;;                          ("kmanifest-" . "kosz-manifest-")
-;;                          ("kutils-"    . "kosz-utils-"))
+;; read-symbol-shorthands: (("ktest-"  . "kosz-test-")
+;;                          ("kutils-" . "kosz-utils-"))
 ;; End:
 
 ;;; kosz-test.el ends here.
