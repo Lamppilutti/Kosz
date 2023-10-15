@@ -149,12 +149,12 @@ If process ends with error return error message as result."
   "Run tests described in package MANIFEST.
 
 Return buffer with result of test execution."
-  (setq manifest (cdr manifest))
-  (let* ((test-runner     (plist-get manifest :test-runner))
+  (let* ((manifest*       (cdr manifest))
+         (test-runner     (plist-get manifest* :test-runner))
          (test-files      (ktest--get-tests manifest))
          (src-directories (ktest--get-src-directories manifest))
-         (result-buffer   (format "*Kosz test reuslt: '%s'"
-                                  (plist-get manifest :name)))
+         (result-buffer   (format "*Kosz test reuslt: '%s'*"
+                                  (plist-get manifest* :name)))
          (temp-directory  (kutils-temporary-file-directory))
          (inhibit-read-only t))
     (condition-case test-error
