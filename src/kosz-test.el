@@ -42,6 +42,9 @@
 (define-error 'ktest-test-error
   "Error while running tests")
 
+(define-error 'ktest-diagnostics-error
+  "Error while running diagnostics")
+
 
 
 (defun ktest--get-tests (manifest)
@@ -136,14 +139,18 @@ If process ends with error return error message as result."
          (byte-compile-log-buffer         result-buffer)
          (checkdoc-diagnostic-buffer      result-buffer)
          (inhibit-read-only               t))
-    (with-current-buffer (get-buffer-create result-buffer)
-      (erase-buffer)
-      (mapc #'byte-compile-file src-files)
-      (mapc #'ktest--checkdock-file src-files)
-      (delete-non-matching-lines "^.*.el:[[:digit:]]+:" (point-min) (point-max))
-      (emacs-lisp-compilation-mode)
-      (goto-char (point-min))
-      (current-buffer))))
+    (condition-case diagnostics-error
+        (with-current-buffer (get-buffer-create result-buffer)
+          (save-excursion
+            (erase-buffer)
+            (mapc #'byte-compile-file src-files)
+            (mapc #'ktest--checkdock-file src-files)
+            (delete-non-matching-lines "^.*.el:[[:digit:]]+:"
+                                       (point-min)
+                                       (point-max))
+            (emacs-lisp-compilation-mode)
+            (current-buffer)))
+      (error (signal 'ktest-diagnostics-error (cdr diagnostics-error))))))
 
 (defun ktest-run-tests (manifest)
   "Run tests described in package MANIFEST.
