@@ -47,6 +47,37 @@
 
 
 
+(defun ktest--defect< (key1 key2)
+  "Return non-nil if KEY1 is less then KEY2.
+
+1. Split KEYS to records of three fields:
+file-name, line-number, collumn-number.
+2. If file-name fields are not equal then compare them by `string<'.
+3. Else if line-number fields are not equal then compare them by `='.
+4. Else compare collumn-number fields by `='.
+
+This function should be used in `sort-subr', so see its doc for information
+about this function arguments."
+  (let* ((string1       (buffer-substring-no-properties (car key1) (cdr key1)))
+         (string2       (buffer-substring-no-properties (car key2) (cdr key2)))
+         (string-parts1 (string-split string1 ":"))
+         (file1         (nth 0 string-parts1))
+         (line1         (string-to-number (nth 1 string-parts1)))
+         (collumn1      (condition-case _
+                            (string-to-number (nth 2 string-parts1))
+                          (error 0)))
+         (string-parts2 (string-split string2 ":"))
+         (file2         (nth 0 string-parts2))
+         (line2         (string-to-number (nth 1 string-parts2)))
+         (collumn2      (condition-case _
+                            (string-to-number (nth 2 string-parts2))
+                          (error 0))))
+    (if (string= file1 file2)
+        (if (= line1 line2)
+            (< collumn1 collumn2)
+          (< line1 line2))
+      (string< file1 file2))))
+
 (defun ktest--get-tests (manifest)
   "Find listed in MANIFEST test files."
   (let* ((root           (car manifest))
@@ -148,6 +179,7 @@ If process ends with error return error message as result."
             (delete-non-matching-lines "^.*.el:[[:digit:]]+:"
                                        (point-min)
                                        (point-max))
+            (sort-subr nil 'forward-line 'end-of-line nil nil #'ktest--defect<)
             (emacs-lisp-compilation-mode)
             (current-buffer)))
       (error (signal 'ktest-diagnostics-error (cdr diagnostics-error))))))
