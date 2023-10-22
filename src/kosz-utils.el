@@ -61,18 +61,10 @@ Signal `kosz-utils--external-process-error' if PROGRAM ends with an error."
                       (cons :exit-code process-exit-code)
                       (cons :output    (kutils-buffer-string))))))))
 
-(defun kutils-copy-file (file newname)
-  "Copy FILE to NEWNAME.
-
-Create directories in NEWNAME path, if they don't exist."
-  (let* ((destination (file-name-directory newname)))
-    (make-directory destination t)
-    (copy-file file newname)))
-
 (defun kutils-directory-files-recursively (file)
-  "Return list of files.
+  "As `directory-files-recursively', but if FILE is file return list with it.
 
-If FILE is directory return its contant recursively. Otherwice if FILE is
+If FILE is directory return its contant recursively.  Otherwice if FILE is
 actially file return (FILE) list."
   (declare (side-effect-free t))
   (if (file-directory-p file)

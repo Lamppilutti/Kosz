@@ -42,6 +42,13 @@
   "Error while package building")
 
 
+(defun kbuild--copy-file (file newname)
+  "Copy FILE to NEWNAME.
+
+Create directories in NEWNAME path, if they don't exist."
+  (let* ((destination (file-name-directory newname)))
+    (make-directory destination t)
+    (copy-file file newname)))
 
 (defun kbuild--make-makeinfo-variables (manifest)
   "Return makeinfo arguments for creating variables from MANIFEST.
@@ -104,7 +111,7 @@ Package full name is \"name-version\" string, like \"kosz-1.1.1\"."
     (dolist (file (seq-difference assets-includes assets-excludes))
       (thread-last (file-relative-name file root)
                    (file-name-concat directory)
-                   (kutils-copy-file file)))))
+                   (kbuild--copy-file file)))))
 
 (defun kbuild--copy-readme-file (manifest directory)
   "Find listed in MANIFEST readme file and copy it to DIRECTORY as \"README\".
