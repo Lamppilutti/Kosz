@@ -21,7 +21,9 @@
 
 ;;; Commentary:
 
-;; Subroutines what could have been in Emacs, but they are not.
+;; Util subroutines for kosz.
+;;
+;; NOTE THAT: This is internal feature you should not use it in your code.
 
 ;;; Code:
 
@@ -37,10 +39,13 @@
 
 
 
-(defun kutils-buffer-string ()
+(defun kutils--buffer-string ()
   "Return the content of current buffer as a string without properties."
   (declare (side-effect-free t))
   (buffer-substring-no-properties (point-min) (point-max)))
+
+
+
 
 (defun kutils-call-process (program directory &rest args)
   "Return the result of executing PROGRAM as string.
@@ -54,12 +59,12 @@ Signal `kosz-utils--external-process-error' if PROGRAM ends with an error."
     (with-temp-buffer
       (setq process-exit-code (apply #'call-process program nil t nil args))
       (if (= 0 process-exit-code)
-          (kutils-buffer-string)
+          (kutils--buffer-string)
         (signal 'kutils-external-process-error
                 (list (cons :process   program)
                       (cons :args      args)
                       (cons :exit-code process-exit-code)
-                      (cons :output    (kutils-buffer-string))))))))
+                      (cons :output    (kutils--buffer-string))))))))
 
 (defun kutils-directory-files-recursively (file)
   "As `directory-files-recursively', but if FILE is file return list with it.
