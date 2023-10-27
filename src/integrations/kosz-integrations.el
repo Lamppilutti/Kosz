@@ -22,6 +22,10 @@
 ;;; Commentary:
 ;; Integrations what can't be refered to specific package and some utils
 ;; subroutines for other integrations.
+;;
+;; Actualy this feature should be called like "kosz-integrations-flymake", but
+;; `elisp-flymake-byte-compile-load-path' variable is part of elisp-mode, so its
+;; name is "kosz-integrations".
 
 ;;; Code:
 
