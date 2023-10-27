@@ -21,6 +21,8 @@
 
 ;;; Commentary:
 ;; Integration with project package.
+;;
+;; NOTE THAT: This is internal feature you should not use it in your code.
 
 ;;; Code:
 
@@ -30,39 +32,100 @@
   (require 'subr-x))
 
 (require 'cl-generic)
+(require 'elisp-mode)
+(require 'keymap)
 (require 'project)
 
 (require 'kosz-manifest)
+(require 'kosz-build)
+(require 'kosz-test)
+
+(require 'kosz-integrations)
+
+
+
+(defvar-keymap kintegrations-project-prefix-map
+  :doc "Keymap for kosz project commands."
+  :parent project-prefix-map
+  ;; "d" and "b" are already used, so bindings selected by the next mnemonics:
+  ;; di[a]gnistics and bu[i]ld.
+  "a" #'kosz-project-run-diagnostics
+  "i" #'kosz-project-build
+  "t" #'kosz-project-run-tests)
+
+
+
+(defun kintegrations-project-setup-keymap ()
+  "Setup extended keymap, if current buffer belongs to kosz project.
+
+`kosz-integrations-project-prefix-map' will be setted localy."
+  (condition-case setup-error
+      (when-let* ((project (project-current))
+                  (kintegrations-find-package-root (project-root project)))
+        (keymap-local-set "C-x p" kintegrations-project-prefix-map))
+    (error (message "Kosz setup keymap error: %S" setup-error))))
+
+(defun kintegrations-project-try-kosz (directory)
+  "Return (kosz . DIRECTORY) if DIRECTORY is subdirectory of kosz package.
+
+The DIRECTORY will be abbreviated.
+This function is used in `project-find-functions'."
+  (when-let* ((directory (kintegrations-utils-find-package-root directory)))
+    (cons 'kosz (abbreviate-file-name directory))))
 
 
 
 ;;;###autoload
-(defun kosz-integrations-project--find-project (dir)
-    (named-let find-project ((dir dir))
-      (cond
-       ((null dir) nil)
-       ((file-exists-p (expand-file-name kmanifest-manifest-file dir))
-        (cons 'kosz dir))
-       (t (find-project (file-name-parent-directory dir))))))
+(defun kosz-project-build ()
+  "Build current kosz project."
+  (declare (interactive-only t))
+  (interactive)
+  (let ((default-directory (project-root (project-current t))))
+    (thread-last
+      (kmanifest-read-manifest default-directory)
+      (kbuild-build-package))))
+
+;;;###autoload
+(defun kosz-project-run-tests ()
+  "Run tests for current kosz project."
+  (declare (interactive-only t))
+  (interactive)
+  (let ((default-directory (project-root (project-current t))))
+    (thread-last
+      (kmanifest-read-manifest default-directory)
+      (ktest-run-tests)
+      (pop-to-buffer))))
+
+;;;###autoload
+(defun kosz-project-run-diagnostics ()
+  "Run diagnostics for current kosz project."
+  (declare (interactive-only t))
+  (interactive)
+  (let ((default-directory (project-root (project-current t))))
+    (thread-last
+      (kmanifest-read-manifest default-directory)
+      (ktest-run-diagnostics)
+      (pop-to-buffer))))
 
 
 
 (cl-defmethod project-root ((project (head kosz)))
+  "Return root directory for kosz package PROJECT."
   (cdr project))
 
-
-
-;;;###autoload
 (with-eval-after-load 'project
-  (add-hook 'project-find-functions #'kosz-integrations-project--find-project))
+  (add-hook 'after-change-major-mode-hook #'kintegrations-project-setup-keymap)
+  (add-hook 'project-find-functions #'kintegrations-project-try-kosz))
 
 
 
 (provide 'kosz-integrations-project)
 
 ;; Local Variables:
-;; read-symbol-shorthands: (("kip-" . "kosz-integrations-project-")
-;;                          ("kmanifest-"  . "kosz-manifest-"))
+;; read-symbol-shorthands: (("kintegrations-" . "kosz-integrations-")
+;;                          ("kmanifest-"     . "kosz-manifest-")
+;;                          ("kbuild-"        . "kosz-build-")
+;;                          ("ktest-"         . "kosz-test-"))
 ;; End:
 
 ;;; kosz-integrations-project.el ends here.
