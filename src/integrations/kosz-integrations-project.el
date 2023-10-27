@@ -39,8 +39,7 @@
 (require 'kosz-manifest)
 (require 'kosz-build)
 (require 'kosz-test)
-
-(require 'kosz-integrations)
+(require 'kosz-extra)
 
 
 
@@ -70,7 +69,7 @@
 
 The DIRECTORY will be abbreviated.
 This function is used in `project-find-functions'."
-  (when-let* ((directory (kintegrations-utils-find-package-root directory)))
+  (when-let* ((directory (kextra-find-package-root directory)))
     (cons 'kosz (abbreviate-file-name directory))))
 
 
@@ -125,7 +124,8 @@ This function is used in `project-find-functions'."
 ;; read-symbol-shorthands: (("kintegrations-" . "kosz-integrations-")
 ;;                          ("kmanifest-"     . "kosz-manifest-")
 ;;                          ("kbuild-"        . "kosz-build-")
-;;                          ("ktest-"         . "kosz-test-"))
+;;                          ("ktest-"         . "kosz-test-")
+;;                          ("kextra-"        . "kosz-extra-"))
 ;; End:
 
 ;;; kosz-integrations-project.el ends here.

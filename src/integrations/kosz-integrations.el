@@ -34,7 +34,7 @@
 
 (require 'kosz-manifest)
 (require 'kosz-utils)
-(require 'kosz-integrations-utils)
+(require 'kosz-extra)
 
 
 
@@ -44,7 +44,7 @@
       ;; Manifest properties can be nil, so use bindings only for check in
       ;; whin-let*.
       (when-let* ((file (buffer-file-name))
-                  (root (kintegrations-utils-find-package-root
+                  (root (kextra-find-package-root
                          (file-name-directory file))))
         (let* ((manifest     (cdr (kmanifest-read-manifest root)))
                (src-includes (thread-first (plist-get manifest :src)
@@ -75,7 +75,8 @@
 ;; Local Variables:
 ;; read-symbol-shorthands: (("kintegrations-" . "kosz-integrations-")
 ;;                          ("kmanifest-"     . "kosz-manifest-")
-;;                          ("kutils-"        . "kosz-utils-"))
+;;                          ("kutils-"        . "kosz-utils-")
+;;                          ("kextra-"        . "kosz-extra-"))
 ;; End:
 
 ;;; kosz-integrations.el ends here.

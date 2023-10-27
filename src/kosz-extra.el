@@ -1,4 +1,4 @@
-;;; kosz-integrations-utils.el ---  -*- lexical-binding: t; -*-
+;;; kosz-extra.el ---  -*- lexical-binding: t; -*-
 
 ;; This file is not part of GNU Emacs.
 
@@ -20,10 +20,7 @@
 ;; along with Kosz.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;; Util subroutines for kosz-integrations.
-;; This is not part of kosz-utils becouse it requires the base kosz package.
-;;
-;; NOTE THAT: This is internal feature you should not use it in your code.
+;; Util subroutines what can be used outside the Kosz.
 
 ;;; Code:
 
@@ -33,7 +30,7 @@
 
 
 
-(defun kintegrations-utils-find-package-root (directory)
+(defun kextra-find-package-root (directory)
   "Return root directory for package stored in DIRECTORY."
   (named-let find-root ((dir directory))
     (cond
@@ -43,11 +40,11 @@
 
 
 
-(provide 'kosz-integrations-utils)
+(provide 'kosz-extra)
 
 ;; Local Variables:
-;; read-symbol-shorthands: (("kintegrations-" . "kosz-integrations-")
-;;                          ("kmanifest-"     . "kosz-manifest-"))
+;; read-symbol-shorthands: (("kextra-"    . "kosz-extra-")
+;;                          ("kmanifest-" . "kosz-manifest-"))
 ;; End:
 
-;;; kosz-integrations-utils.el ends here.
+;;; kosz-extra.el ends here.
