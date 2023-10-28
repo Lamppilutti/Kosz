@@ -169,7 +169,7 @@ Skip properties what have no use for \"package.el\"."
           :commit   commit
           :keywords keywords
           :maintainer
-          (when (not (null maintainer))
+          (unless (null maintainer)
             (cons (car maintainer) (cadr maintainer)))
           :authors
           (mapcar (lambda (pair) (cons (car pair) (cadr pair))) authors))))

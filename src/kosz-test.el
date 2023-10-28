@@ -198,7 +198,7 @@ Return buffer with result of test execution."
              (temp-directory  (make-temp-file "kosz-" t))
              (inhibit-read-only t))
         (with-current-buffer result-buffer
-          (when (not (equal 'compilation-mode major-mode)) (compilation-mode))
+          (unless (equal 'compilation-mode major-mode) (compilation-mode))
           (erase-buffer)
           (insert
            (ktest--call-test-process
