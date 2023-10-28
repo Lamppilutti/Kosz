@@ -77,16 +77,6 @@ actially file return (FILE) list."
                                    nil nil t)
     (list file)))
 
-(defun kutils-temporary-file-directory ()
-  "Return (almost) unique temporary file name."
-  (declare (side-effect-free t))
-  (thread-last
-    (time-convert nil 'list)
-    (mapconcat (lambda (elt) (format "%s" elt)))
-    (format "temp-%s")
-    (file-name-concat (temporary-file-directory))
-    (file-name-as-directory)))
-
 (defun kutils-expand-files (files directory)
   "Recursively expand FILES relative to DIRECTORY.
 

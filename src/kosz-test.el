@@ -188,28 +188,26 @@ If process ends with error return error message as result."
   "Run tests described in package MANIFEST.
 
 Return buffer with result of test execution."
-  (let* ((manifest*       (cdr manifest))
-         (test-runner     (plist-get manifest* :test-runner))
-         (test-files      (ktest--get-tests manifest))
-         (src-directories (ktest--get-src-directories manifest))
-         (result-buffer   (format "*Kosz test reuslt: '%s'*"
-                                  (plist-get manifest* :name)))
-         (temp-directory  (kutils-temporary-file-directory))
-         (inhibit-read-only t))
-    (condition-case test-error
-        (progn
-          (make-directory temp-directory t)
-          (with-current-buffer result-buffer
-            (when (not (equal 'compilation-mode major-mode)) (compilation-mode))
-            (erase-buffer)
-            (insert
-             (ktest--call-test-process
-              temp-directory
-              (append (ktest--get-dependencies manifest) src-directories)
-              test-files
-              test-runner))
-            (current-buffer)))
-      (error (signal 'ktest-test-error (cdr test-error))))))
+  (condition-case test-error
+      (let* ((manifest*       (cdr manifest))
+             (test-runner     (plist-get manifest* :test-runner))
+             (test-files      (ktest--get-tests manifest))
+             (src-directories (ktest--get-src-directories manifest))
+             (result-buffer   (format "*Kosz test reuslt: '%s'*"
+                                      (plist-get manifest* :name)))
+             (temp-directory  (make-temp-file "kosz-" t))
+             (inhibit-read-only t))
+        (with-current-buffer result-buffer
+          (when (not (equal 'compilation-mode major-mode)) (compilation-mode))
+          (erase-buffer)
+          (insert
+           (ktest--call-test-process
+            temp-directory
+            (append (ktest--get-dependencies manifest) src-directories)
+            test-files
+            test-runner))
+          (current-buffer)))
+    (error (signal 'ktest-test-error (cdr test-error)))))
 
 
 
