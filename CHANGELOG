@@ -1,56 +1,40 @@
-# -*- mode: org -*-
+# -*- mode: emacs-news-view -*-
 
-* Changelog
+* (0.11.0) -- 2023.09.27
 
-** (0.11.0) -- 2023.09.27
+** Added
+*** New 'kosz-ui' feature for interactive functions.
 
-*** Added
-- Add ~kosz-build-build-docs~ functions for build ~.texi~ files.
+*** New 'kosz-build-build-docs' functions for build ".texi" files.
 
-- Download package dependencies for test step.
+*** Downloading dependencies for test step.
+Dependency packages will not appears in user's installed package list.
 
-*** Changed
-- Add ~kosz-ui~ feature.
+** Changed
+*** Move interactive functions from other features to 'kosz-ui'.
+'kosz-build-package'                -> 'kosz-ui-build-package'
+'kosz-build-and-install-package'    -> 'kosz-ui-build-and-install-package'
+'kosz-build-vc-package'             -> 'kosz-ui-build-vc-package'
+'kosz-build-and-install-vc-package' -> 'kosz-ui-build-and-install-vc-package'
+'kosz-test-package'                 -> 'kosz-ui-test-package'
 
-- Rename ~kosz-build-package~ to ~kosz-ui-build-package~.
-  Move to ~kosz-ui~ feature.
+*** API renames.
+'kosz-build-build'            -> 'kosz-build-build-package'
+'kosz-utils-validation-error' -> 'kosz-manifest-manifest-validation-error'
 
-- Rename ~kosz-build-and-install-package~ to
-  ~kosz-ui-build-and-install-package~.
-  Move to ~kosz-ui~ feature.
+*** Properties what contain file paths should to contain relative paths.
+"~", "/", ".", ".." in beggining of this properties trigger error.
 
-- Rename ~kosz-build-vc-package~ to ~kosz-ui-build-vc-package~.
-  Move to ~kosz-ui~ feature.
+*** Store builded package in "{root}/build-{pkgname}-{pkgversion}" directory.
 
-- Rename ~kosz-build-and-install-vc-package~ to
-  ~kosz-ui-build-and-install-vc-package~.
-  Move to ~kosz-ui~ feature.
+*** Documentation improvement.
 
-- Rename ~kosz-test-package~ to ~kosz-ui-test-package~.
-  Move to ~kosz-ui~ feature.
+** Fixed
+*** Processing "...-exclude" properties may trigger error.
 
-- Rename ~kosz-build-build~ to ~kosz-build-build-package~.
+*** Requiring unloaded features breaks manifest reading.
 
-- Rename ~kosz-utils-validation-error~ to
-  ~kosz-manifest-manifest-validation-error~.
+*** Manifest no longer readed as nil if it doesn't contain named properties.
 
-- ~:readme~, ~:src~, ~:src-exclude~, ~:docs~, ~:docs-exclude~, ~:assets~,
-  ~:assets-exclude~, ~:tests~ and ~:test-exclude~ properties should not contains
-  ~.~, ~..~, ~/~ or empty strings.
-
-- Put builded packages in ~build/pkgname-pkversion/~ directory.
-
-- Improve docstrings.
-
-- Refactor code.
-
-*** Fixed
-- Fix error while processing ~:src-exclude~, ~:docs-exclude~, ~:assets-exclude~
-  and ~:test-exclude~ properties.
-
-- Fix unable to load feature in manifest file.
-
-- Fix error when manifest without named properties is readed as nil.
-
-** (0.10.1) -- 2023.09.13
+* (0.10.1) -- 2023.09.13
 Start changelog.
