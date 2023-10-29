@@ -1,17 +1,111 @@
-# -*- mode: emacs-news-view -*-
+-*- mode: emacs-news-view -*-
+
+* (0.12.0) -- 2023.10.30
+
+** Added
+
+*** New 'kosz-test-run-diagnostics' function.
+It diagnoses package and returns buffer with finded package problems.
+
+*** New 'kosz-diagnose-selected-package' interactive function.
+It runs diagnostics for selected package.
+
+*** New 'kosz-project-build' interactive function.
+It builds current project by Kosz.
+
+*** New 'kosz-project-test' interactive function.
+It runs tests for current project by Kosz.
+
+*** New 'kosz-project-diagnose' interactive function.
+It runs diagnostics for current project by Kosz.
+
+*** New 'kosz-integrations-project-prefix-map' keymap.
+It extends 'project-prefix-map' by Kosz-specific commands. By default it is
+binded to 'C-x p' and replaces 'project-prefix-map' if project is kosz package.
+
+*** Optional fix for flymake "no such file or directory {feature}" warning.
+This could have happening when required feature was in other directory, relative
+to current feature. Load 'kosz-integrations' feature for turn it on.
+
+*** New 'kosz' feature.
+It loads all Kosz parts at once, including integration features, if they was not
+excluded from the building.
+
+It also contains some basic interactive functions for working with kosz
+packages.
+
+*** New 'kosz-extra' feature.
+It cointains public utility functions.
+
+*** New 'kosz-extra-find-package-root' function.
+It searches package root in parent directories.
+
+** Changed
+
+*** Check that ':maintainer' and ':authors' properties are exactly pairs.
+Before that properties could be list of more then two elements.
+
+*** Package testing result is written in "*Kosz test result {pkg}*" buffer now.
+
+*** Debug frames in child Emacs processes formated as lists now.
+
+*** Commit "." as only accepted version separator.
+
+*** Commit list of accepted version pre-release identificators.
+Accepted identificators are -alpha < -beta < -rc.
+
+*** Now if property listed in manifest more then once trigger error.
+The 'kosz-manifest-manifest-validation-error' will signaled in this case.
+
+*** Signal spedific error, if manifest reading terminated with error.
+The 'kosz-manifest-manifest-reading-error' will signaled in this case.
+
+*** Signal specific error, if package building terminaded with error.
+The 'kosz-build-build-error' will signaled in this case.
+
+*** Signal specific error, if package testing terminated with error.
+The 'kosz-test-test-error' will signaled in this case.
+
+*** 'project-root' no more extends automaticaly for kosz packages.
+Now it is needed to load 'kosz-integrations-project' feature manualy.
+
+*** Install dependencies to '{root}/build/dependencies' directory.
+
+*** Rename 'kosz-ui-build-package' to 'kosz-build-selected-package'.
+
+*** Rename 'kosz-ui-test-package' to 'kosz-test-selected-package'.
+
+*** Documentation improvement.
+
+** Removed
+
+*** 'kosz-ui' feature.
+
+*** Remove 'kosz-ui-build-and-install-package'.
+
+*** Remove 'kosz-ui-build-vc-package'.
+
+*** Remove 'kosz-ui-build-and-install-vc-package'.
+
+** Fixed
+
+*** ':assets-exclude' property doesn't validate.
+
+*** The same temporary directory used for different test runs.
+
+*** Function 'kosz-build-manifest->define-package' doesn't validate manifest.
+
+
 
 * (0.11.0) -- 2023.09.27
 
 ** Added
 
 *** New 'kosz-ui' feature.
-This feature contains interactive functions.
+It contains interactive functions.
 
 *** New 'kosz-build-build-docs' function.
-This function builds ".texi" files info manual, without building entire package.
-
-*** Downloading dependencies for test step.
-Dependency packages will not appears in user's installed package list.
+It builds ".texi" files info manual, without building entire package.
 
 ** Changed
 
@@ -21,6 +115,10 @@ Properties which paths start with "~", "/", ".", ".." will treated as invalid.
 *** Once build, package will be stored in specific directory.
 The directory for builded package will have "{root}/build/{name}-{version}"
 name.
+
+*** Download package dependencies for the test step.
+The test step will download package dependencies before running tests.
+Downloaded dependencies will be stored in "{root}/build/dependencies" directory.
 
 *** Rename 'kosz-build-package' function.
 New name is 'kosz-ui-build-package'.

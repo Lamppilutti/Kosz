@@ -2,7 +2,7 @@
 
 
 
-(define-package 'kosz "0.11.0"
+(define-package 'kosz "0.12.0"
   :description  "Emacs package builder."
   :dependencies '((emacs "29.1"))
 
@@ -17,3 +17,9 @@
 
   :tests       '("test/")
   :test-runner #'ert-run-tests-batch-and-exit)
+
+
+
+;; Local Variables:
+;; flymake-diagnostic-functions: nil
+;; End:
