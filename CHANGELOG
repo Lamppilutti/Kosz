@@ -3,38 +3,57 @@
 * (0.11.0) -- 2023.09.27
 
 ** Added
-*** New 'kosz-ui' feature for interactive functions.
 
-*** New 'kosz-build-build-docs' functions for build ".texi" files.
+*** New 'kosz-ui' feature.
+This feature contains interactive functions.
+
+*** New 'kosz-build-build-docs' function.
+This function builds ".texi" files info manual, without building entire package.
 
 *** Downloading dependencies for test step.
 Dependency packages will not appears in user's installed package list.
 
 ** Changed
-*** Move interactive functions from other features to 'kosz-ui'.
-'kosz-build-package'                -> 'kosz-ui-build-package'
-'kosz-build-and-install-package'    -> 'kosz-ui-build-and-install-package'
-'kosz-build-vc-package'             -> 'kosz-ui-build-vc-package'
-'kosz-build-and-install-vc-package' -> 'kosz-ui-build-and-install-vc-package'
-'kosz-test-package'                 -> 'kosz-ui-test-package'
 
-*** API renames.
-'kosz-build-build'            -> 'kosz-build-build-package'
-'kosz-utils-validation-error' -> 'kosz-manifest-manifest-validation-error'
+*** File paths in properties should be relative.
+Properties which paths start with "~", "/", ".", ".." will treated as invalid.
 
-*** Properties what contain file paths should to contain relative paths.
-"~", "/", ".", ".." in beggining of this properties trigger error.
+*** Once build, package will be stored in specific directory.
+The directory for builded package will have "{root}/build/{name}-{version}"
+name.
 
-*** Store builded package in "{root}/build-{pkgname}-{pkgversion}" directory.
+*** Rename 'kosz-build-package' function.
+New name is 'kosz-ui-build-package'.
+
+*** Rename 'kosz-build-and-install-package' function.
+New name is 'kosz-ui-build-and-install-package'.
+
+*** Rename 'kosz-build-vc-package' function.
+New name is 'kosz-ui-build-vc-package'.
+
+*** Rename 'kosz-build-and-install-vc-package' function.
+New name is 'kosz-ui-build-and-install-vc-package'.
+
+*** Rename 'kosz-test-package' function.
+New name is 'kosz-ui-test-package'
+
+*** Rename 'kosz-build-build' function.
+New name is 'kosz-build-build-package'.
+
+*** Rename 'kosz-utils-validation-error' error.
+New name is 'kosz-manifest-manifest-validation-error'
 
 *** Documentation improvement.
 
 ** Fixed
-*** Processing "...-exclude" properties may trigger error.
 
-*** Requiring unloaded features breaks manifest reading.
+*** An error may have occured while processing the "...-exclude" properties.
 
-*** Manifest no longer readed as nil if it doesn't contain named properties.
+*** The 'load' function in the manifest stops the reading process.
+
+*** The manifest file was readed as nil, if it had not named properties.
+
+
 
 * (0.10.1) -- 2023.09.13
 Start changelog.
