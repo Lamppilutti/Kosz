@@ -1,9 +1,4 @@
-;;; bootstrap.el --- bootstrap Kosz. -*- lexical-binding: t; -*-
-
-;;; Commentary:
-;; Build Kosz package by Kosz without Kosz.
-
-;;; Code:
+#!/usr/bin/env -S emacs --script
 
 
 
@@ -17,6 +12,10 @@
                              (kosz-manifest-read-manifest
                               (expand-file-name ".")))))
 
+(print "Done")
 
 
-;;; bootstrap.el ends here
+
+;; Local Variables:
+;; flymake-diagnostic-functions: nil
+;; End:
