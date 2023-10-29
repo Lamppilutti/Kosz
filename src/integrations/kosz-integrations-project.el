@@ -83,7 +83,7 @@ This function is used in `project-find-functions'."
     (kbuild-build-package (kmanifest-read-manifest default-directory))))
 
 ;;;###autoload
-(defun kosz-project-run-tests ()
+(defun kosz-project-test ()
   "Run tests for current kosz project."
   (declare (interactive-only t))
   (interactive)
@@ -94,7 +94,7 @@ This function is used in `project-find-functions'."
       (pop-to-buffer))))
 
 ;;;###autoload
-(defun kosz-project-run-diagnostics ()
+(defun kosz-project-diagnose ()
   "Run diagnostics for current kosz project."
   (declare (interactive-only t))
   (interactive)
