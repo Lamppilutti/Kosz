@@ -48,7 +48,10 @@
   (declare (interactive-only ktest-run-tests))
   (interactive "DPackage directory: ")
   (if-let* ((default-directory (kextra-find-package-root directory)))
-      (ktest-run-tests (kmanifest-read-manifest default-directory))
+      (thread-last
+        (kmanifest-read-manifest default-directory)
+        (ktest-run-tests)
+        (pop-to-buffer))
     (user-error "Directory is not part of package" directory)))
 
 ;;;###autoload
@@ -56,7 +59,10 @@
   (declare (interactive-only ktest-run-diagnostics))
   (interactive "DPackage directory: ")
   (if-let* ((default-directory (kextra-find-package-root directory)))
-      (ktest-run-diagnostics (kmanifest-read-manifest default-directory))
+      (thread-last
+        (kmanifest-read-manifest default-directory)
+        (ktest-run-diagnostics)
+        (pop-to-buffer))
     (user-error "Directory is not part of package" directory)))
 
 

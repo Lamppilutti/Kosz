@@ -80,9 +80,7 @@ This function is used in `project-find-functions'."
   (declare (interactive-only t))
   (interactive)
   (let ((default-directory (project-root (project-current t))))
-    (thread-last
-      (kmanifest-read-manifest default-directory)
-      (kbuild-build-package))))
+    (kbuild-build-package (kmanifest-read-manifest default-directory))))
 
 ;;;###autoload
 (defun kosz-project-run-tests ()
