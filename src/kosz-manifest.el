@@ -33,8 +33,16 @@
 (defconst kmanifest-manifest-file "package.kosz"
   "Manifest file name.")
 
+
+
 (defconst kmanifest--dump-file ".manifest-dump"
   "File for manifest dump.")
+
+(defconst kmanifest--version-regexp-alist
+  "Accepted version pre-release version identificators."
+  '(("^-rc$"    . -1)
+    ("^-beta$"  . -2)
+    ("^-aplha$" . -3)))
 
 
 
@@ -106,7 +114,7 @@ there are ERRORs at the end of validation.
 (defun kmanifest--versionp (object)
   "Return t if OBJECT is string that `version-to-list' undertood."
   (let* ((version-separator    ".")
-         (version-regexp-alist nil))
+         (version-regexp-alist kmanifest--version-regexp-alist))
     (ignore-errors (version-to-list object))))
 
 (defun kmanifest--pair-p (object firstp secondp)
