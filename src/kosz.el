@@ -36,7 +36,7 @@
 
 
 ;;;###autoload
-(defun kosz-build-package (directory)
+(defun kosz-build-selected-package (directory)
   (declare (interactive-only kbuild-build))
   (interactive "DPackage directory: ")
   (if-let* ((default-directory (kextra-find-package-root directory)))
@@ -44,7 +44,7 @@
     (user-error "Directory is not part of package" directory)))
 
 ;;;###autoload
-(defun kosz-test-package (directory)
+(defun kosz-test-selected-package (directory)
   (declare (interactive-only ktest-run-tests))
   (interactive "DPackage directory: ")
   (if-let* ((default-directory (kextra-find-package-root directory)))
@@ -55,7 +55,7 @@
     (user-error "Directory is not part of package" directory)))
 
 ;;;###autoload
-(defun kosz-diagnose-package (directory)
+(defun kosz-diagnose-selected-package (directory)
   (declare (interactive-only ktest-run-diagnostics))
   (interactive "DPackage directory: ")
   (if-let* ((default-directory (kextra-find-package-root directory)))
