@@ -149,6 +149,7 @@ If process ends with error return error message as result."
     (condition-case process-error
         (apply #'kutils-call-process "emacs" directory
                "--batch" "--quick"
+               "--eval"  "(setq debugger-stack-frame-as-list t)"
                (append --directories --load --funcall)) ; Order is important.
       (kutils-external-process-error
        (alist-get :output process-error)))))

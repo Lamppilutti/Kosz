@@ -265,6 +265,7 @@ respectively."
          (init-code (format "%S" (kmanifest--init-emacs dump-file))))
     (kutils-call-process "emacs" directory
                          "--batch" "--quick"
+                         "--eval"  "(setq debugger-stack-frame-as-list t)"
                          "--eval" init-code
                          "--load" kmanifest-manifest-file)
     (unwind-protect
