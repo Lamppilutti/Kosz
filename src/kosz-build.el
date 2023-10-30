@@ -134,7 +134,6 @@ Signal `kosz-build-build-error' if listed file is directory."
          (docs-excludes  (thread-first (plist-get manifest* :docs-exclude)
                                        (kutils-expand-files root)))
          (temp-directory (make-temp-file "kosz-" t)))
-    (make-directory temp-directory)
     (thread-last
       (seq-difference docs-includes docs-excludes)
       (seq-filter (lambda (file)

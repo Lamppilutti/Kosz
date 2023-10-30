@@ -1,5 +1,13 @@
 -*- mode: emacs-news-view -*-
 
+* (0.12.1) -- 2023.10.31
+
+** Fixed
+
+*** The unbable to create temp directory for documentation building.
+
+
+
 * (0.12.0) -- 2023.10.30
 
 ** Added
