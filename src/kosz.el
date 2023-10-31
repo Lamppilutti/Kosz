@@ -50,7 +50,7 @@
   (if-let* ((default-directory (kextra-find-package-root directory)))
       (thread-last
         (kmanifest-read-manifest default-directory)
-        (ktest-run-tests)
+        (ktest-test-package)
         (pop-to-buffer))
     (user-error "Directory is not part of package" directory)))
 
@@ -61,7 +61,7 @@
   (if-let* ((default-directory (kextra-find-package-root directory)))
       (thread-last
         (kmanifest-read-manifest default-directory)
-        (ktest-run-diagnostics)
+        (ktest-diagnose-package)
         (pop-to-buffer))
     (user-error "Directory is not part of package" directory)))
 

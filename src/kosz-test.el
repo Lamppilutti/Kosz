@@ -39,10 +39,10 @@
 
 
 
-(define-error 'ktest-test-error
+(define-error 'ktest-package-testing-error
   "Error while running tests")
 
-(define-error 'ktest-diagnostics-error
+(define-error 'ktest-package-diagnostics-error
   "Error while running diagnostics")
 
 
@@ -156,7 +156,7 @@ If process ends with error return error message as result."
 
 
 
-(defun ktest-run-diagnostics (manifest)
+(defun ktest-diagnose-package (manifest)
   "Run diagnostics for project described in MANIFEST."
   (let* ((manifest*     (cdr manifest))
          (src-files     (ktest--get-src-files manifest))
@@ -183,9 +183,10 @@ If process ends with error return error message as result."
             (sort-subr nil 'forward-line 'end-of-line nil nil #'ktest--defect<)
             (emacs-lisp-compilation-mode)
             (current-buffer)))
-      (error (signal 'ktest-diagnostics-error (cdr diagnostics-error))))))
+      (error (signal 'ktest-package-diagnostics-error
+                     (cdr diagnostics-error))))))
 
-(defun ktest-run-tests (manifest)
+(defun ktest-test-package (manifest)
   "Run tests described in package MANIFEST.
 
 Return buffer with result of test execution."
@@ -208,7 +209,7 @@ Return buffer with result of test execution."
             test-files
             test-runner))
           (current-buffer)))
-    (error (signal 'ktest-test-error (cdr test-error)))))
+    (error (signal 'ktest-package-testing-error (cdr test-error)))))
 
 
 
