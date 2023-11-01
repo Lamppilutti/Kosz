@@ -48,9 +48,9 @@
   :parent project-prefix-map
   ;; "d" and "b" are already used, so bindings selected by the next mnemonics:
   ;; di[a]gnistics and bu[i]ld.
-  "a" #'kosz-project-run-diagnostics
+  "a" #'kosz-project-diagnose
   "i" #'kosz-project-build
-  "t" #'kosz-project-run-tests)
+  "t" #'kosz-project-test)
 
 
 
