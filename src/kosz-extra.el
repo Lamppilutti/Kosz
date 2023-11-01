@@ -35,7 +35,7 @@
   (named-let find-root ((dir directory))
     (cond
      ((null dir) nil)
-     ((file-exists-p (expand-file-name kmanifest-manifest-file dir)) dir)
+     ((file-exists-p (expand-file-name kmanifest-manifest-file-name dir)) dir)
      (t (find-root (file-name-parent-directory dir))))))
 
 

@@ -30,12 +30,12 @@
 
 
 
-(defconst kmanifest-manifest-file "package.kosz"
+(defconst kmanifest-manifest-file-name "package.kosz"
   "Manifest file name.")
 
 
 
-(defconst kmanifest--dump-file ".manifest-dump"
+(defconst kmanifest--dump-file-name ".manifest-dump"
   "File for manifest dump.")
 
 (defconst kmanifest--version-regexp-alist
@@ -49,12 +49,12 @@
 (define-error 'kmanifest-manifest-validation-error
   "Manifest has invalid properties")
 
-(define-error 'kmanifest-manifest-read-manifest-error
+(define-error 'kmanifest-manifest-reading-error
   "Error while manifest reading")
 
 
 
-(defmacro kmanifest--manifest-validation (manifest &rest property-cases)
+(defmacro kmanifest--validate-manifest (manifest &rest property-cases)
   "Utility macros for validate MANIFEST's properties.
 
 PROPERTY-CASES is a list of (PROPERTY CONDITION MESSAGE) elements.
@@ -178,7 +178,7 @@ Return MANIFEST if significant properties are valid.  Otherwice signal
 \(:property \\='property-name'
  :value    \\='property-value'
  :expected \\='string-that-described-expected-value') plist as data."
-  (kmanifest--manifest-validation (cdr manifest)
+  (kmanifest--validate-manifest (cdr manifest)
     (:name
      (kmanifest--pkg-name-p it)
      "Name must be not nil symbol")
@@ -261,20 +261,20 @@ the manifest file was readed, and a PLIST is properties readed from the manifest
 file.  Package name and package version are passed as `:name' and `:version'
 respectively."
   (setq directory (expand-file-name directory))
-  (let* ((dump-file (file-name-concat directory kmanifest--dump-file))
+  (let* ((dump-file (file-name-concat directory kmanifest--dump-file-name))
          (init-code (format "%S" (kmanifest--init-emacs dump-file))))
     (kutils-call-process "emacs" directory
                          "--batch" "--quick"
                          "--eval"  "(setq debugger-stack-frame-as-list t)"
                          "--eval" init-code
-                         "--load" kmanifest-manifest-file)
+                         "--load" kmanifest-manifest-file-name)
     (unwind-protect
         (condition-case read-error
             (with-temp-buffer
               (insert-file-contents dump-file)
               (kmanifest-validate-manifest
                (cons (abbreviate-file-name directory) (sexp-at-point))))
-          (error (signal 'kmanifest-read-manifest-error (cdr read-error))))
+          (error (signal 'kmanifest-manifest-reading-error (cdr read-error))))
       (delete-file dump-file))))
 
 
