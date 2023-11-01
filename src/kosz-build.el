@@ -41,6 +41,9 @@
 (define-error 'kbuild-package-building-error
   "Error while package building")
 
+(define-error 'kbuild-docs-building-error
+  "Error while documentation building")
+
 
 (defun kbuild--copy-file (file newname)
   "Copy FILE to NEWNAME.
@@ -116,7 +119,7 @@ Package full name is \"name-version\" string, like \"kosz-1.1.1\"."
 (defun kbuild--copy-readme-file (manifest directory)
   "Find listed in MANIFEST readme file and copy it to DIRECTORY as \"README\".
 
-Signal `kosz-build-package-building-error' if listed file is directory."
+Signal error if listed file is directory."
   (when-let* ((root        (car manifest))
               (manifest*   (cdr manifest))
               (readme-file (thread-first (plist-get manifest* :readme)
@@ -189,7 +192,7 @@ Return path to directory with builded documentation."
           (make-directory build-directory t)
           (kbuild--build-docs manifest build-directory)
           build-directory)
-      (error (signal 'kbuild-build-error (cdr build-error))))))
+      (error (signal 'kbuild-docs-building-error (cdr build-error))))))
 
 (defun kbuild-build-package (manifest)
   "Build tar file for package described in MANIFEST.
