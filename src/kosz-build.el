@@ -38,7 +38,7 @@
 
 
 
-(define-error 'kbuild-build-error
+(define-error 'kbuild-package-building-error
   "Error while package building")
 
 
@@ -116,7 +116,7 @@ Package full name is \"name-version\" string, like \"kosz-1.1.1\"."
 (defun kbuild--copy-readme-file (manifest directory)
   "Find listed in MANIFEST readme file and copy it to DIRECTORY as \"README\".
 
-Signal `kosz-build-build-error' if listed file is directory."
+Signal `kosz-build-package-building-error' if listed file is directory."
   (when-let* ((root        (car manifest))
               (manifest*   (cdr manifest))
               (readme-file (thread-first (plist-get manifest* :readme)
@@ -177,7 +177,7 @@ Skip properties what have no use for \"package.el\"."
   "Build package documentation for package described in MANIFEST.
 
 It builds \".texi\" files to \".info\" files and create \"dir\" file.
-Signal `kosz-build-build-error' If error cases while building.
+Signal `kosz-build-package-building-error'' If error cases while building.
 
 Return path to directory with builded documentation."
   (let* ((root             (car manifest))
@@ -196,7 +196,7 @@ Return path to directory with builded documentation."
 
 Created tar file can be used by \"package.el\".  Extracted from tar directory
 can be used in `load-path'.
-Signal `kosz-build-build-error' If error cases while building.
+Signal `kosz-build-package-building-error' If error cases while building.
 
 Return path to created tar file."
   (let* ((root              (car manifest))
