@@ -25,6 +25,8 @@
 ;;; Code:
 
 
+(eval-when-compile
+  (require 'subr-x))
 
 (require 'kosz-utils)
 
@@ -133,7 +135,7 @@ The pair is list of two elements, for example (1 2)."
 
 Check the first element of each pair by FIRSTP, and the second one by SECONDP.
 
-See `kmanifest--pair-p'."
+See `kosz-manifest--pair-p'."
   (while (and (consp object)
               (kmanifest--pair-p (car object) firstp secondp))
     (setq object (cdr object)))
@@ -150,23 +152,32 @@ See `kmanifest--pair-p'."
 
 See `kosz-manifest--valid-file-path-p'"
   (while (and (consp object)
-              (stringp (car object))
               (kmanifest--valid-file-path-p (car object)))
     (setq object (cdr object)))
   (null object))
 
-(defun kmanifest--init-emacs (dump-file)
-  "Return code for initialazing Emacs.
+(defun kmanifest--read-process-init-code (dump-file)
+  "Return code for initialazing Emacs for manifest reading.
 
-DUMP-FILE is file in which manifest will be dumped after reading.
-
-This code should be evaluated before manifest reading."
+DUMP-FILE is file in which manifest will be dumped after reading."
   `(progn
+     (setq debugger-stack-frame-as-list t)
      (defun define-package (name version &rest properties)
-       (setq properties (plist-put properties :name name))
-       (setq properties (plist-put properties :version version))
+       (setq properties (plist-put properties :name name)
+             properties (plist-put properties :version version))
        (with-temp-file ,dump-file
          (insert (format "%S" properties))))))
+
+(defun kmanifest--run-read-process (directory dump-file)
+  "Run manifest read process in DIRECTORY.
+
+Pass DUMP-FILE to reading process.
+See `kosz-manifest--read-process-init-code'."
+  (kutils-call-process
+   "emacs" directory
+   "--batch" "--quick"
+   "--eval"  (format "%S" (kmanifest--read-process-init-code dump-file))
+   "--load"  kmanifest-manifest-file-name))
 
 
 
@@ -175,9 +186,9 @@ This code should be evaluated before manifest reading."
 
 Return MANIFEST if significant properties are valid.  Otherwice signal
 `kosz-manifest-manifest-validation-error' with
-\(:property \\='property-name'
- :value    \\='property-value'
- :expected \\='string-that-described-expected-value') plist as data."
+\(:property `property-name'
+ :value    `property-value'
+ :expected `string-that-described-expected-value') plist as data."
   (kmanifest--validate-manifest (cdr manifest)
     (:name
      (kmanifest--pkg-name-p it)
@@ -261,20 +272,16 @@ the manifest file was readed, and a PLIST is properties readed from the manifest
 file.  Package name and package version are passed as `:name' and `:version'
 respectively."
   (setq directory (expand-file-name directory))
-  (let* ((dump-file (file-name-concat directory kmanifest--dump-file-name))
-         (init-code (format "%S" (kmanifest--init-emacs dump-file))))
-    (kutils-call-process "emacs" directory
-                         "--batch" "--quick"
-                         "--eval"  "(setq debugger-stack-frame-as-list t)"
-                         "--eval" init-code
-                         "--load" kmanifest-manifest-file-name)
+  (let* ((dump-file (file-name-concat directory kmanifest--dump-file-name)))
     (unwind-protect
-        (condition-case read-error
+        (condition-case error
             (with-temp-buffer
+              (kmanifest--run-read-process directory dump-file)
               (insert-file-contents dump-file)
               (kmanifest-validate-manifest
-               (cons (abbreviate-file-name directory) (sexp-at-point))))
-          (error (signal 'kmanifest-manifest-reading-error (cdr read-error))))
+               (cons (abbreviate-file-name directory)
+                     (sexp-at-point))))
+          (error (signal 'kmanifest-manifest-reading-error (cdr error))))
       (delete-file dump-file))))
 
 
