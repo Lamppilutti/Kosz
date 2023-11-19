@@ -20,7 +20,7 @@
 ;; along with Kosz.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;; API for building packages for `load-path' and "package.el".
+;; API for building packages for package building.
 
 ;;; Code:
 
@@ -38,11 +38,32 @@
 
 
 
+(defconst kbuild--message-file-name ".build-message"
+  "File for receive data from build process.")
+
+
+
+(defvar kbuild-load-directories
+  (list (file-name-directory load-file-name)))
+
+(defvar kbuild-build-package-functions
+  (list #'kbuild-make-pkg-file
+        #'kbuild-collect-src-files
+        #'kbuild-collect-assets-files
+        #'kbuild-collect-readme-file
+        #'kbuild-build-texi))
+
+(defvar kbuild-pack-package-function
+  #'kbuild-pack-package)
+
+
+
 (define-error 'kbuild-package-building-error
   "Error while package building")
 
 (define-error 'kbuild-docs-building-error
   "Error while documentation building")
+
 
 
 (defun kbuild--copy-file (file newname)
@@ -81,8 +102,31 @@ Package full name is \"name-version\" string, like \"kosz-1.1.1\"."
   (setq manifest (cdr manifest))
   (format "%s-%s" (plist-get manifest :name) (plist-get manifest :version)))
 
-(defun kbuild--generate-pkg-file (manifest directory)
-  "Generate \"-pkg.el\" file created from MANIFEST inside DIRECTORY."
+(defun kbuild--run-build-process (directory not-pack &rest args)
+  "Run package build process in DIRECTORY.
+Not pack package if NOT-PACK is non-nil.
+
+ARGS is arg list for build and pack functions."
+  (kutils-call-process
+   "emacs" directory
+   "--batch" "--quick"
+   "--eval"
+   (thread-last
+     `(progn
+        (setq debugger-stack-frame-as-list t
+              load-path (append load-path ,kosz-build-load-directories))
+        (mapc (lambda (function) (apply function ,args))
+              ,kbuild-build-package-functions)
+        (unless ,not-pack
+          (with-temp-file ,kbuild--message-file-name
+            (insert (apply ,kosz-build-pack-package-function ,args)))))
+     (format "%S"))))
+
+
+
+(defun kbuild-make-pkg-file (manifest directory)
+  "Create \"-pkg.el\" file from MANIFEST inside DIRECTORY."
+  (require 'kosz-build)
   (let* ((manifest*           (cdr manifest))
          (define-package-form (kbuild-manifest->define-package manifest))
          (file-name           (format "%s-pkg.el" (plist-get manifest* :name))))
@@ -90,8 +134,9 @@ Package full name is \"name-version\" string, like \"kosz-1.1.1\"."
       (pp-emacs-lisp-code define-package-form)
       (insert "\n;; Local Variables:\n;; no-byte-compile: t\n;; End:\n"))))
 
-(defun kbuild--copy-src-files (manifest directory)
+(defun kbuild-collect-src-files (manifest directory)
   "Find listed in MANIFEST src files and copy them to DIRECTORY."
+  (require 'kosz-build)
   (let* ((root         (car manifest))
          (manifest*    (cdr manifest))
          (src-includes (thread-first (plist-get manifest* :src)
@@ -103,8 +148,9 @@ Package full name is \"name-version\" string, like \"kosz-1.1.1\"."
       (seq-filter (lambda (file) (string= ".el" (file-name-extension file t))))
       (mapc (lambda (file) (copy-file file directory))))))
 
-(defun kbuild--copy-assets-files (manifest directory)
+(defun kbuild-collect-assets-files (manifest directory)
   "Find listed in MANIFEST assets files and copy them to DIRECTORY."
+  (require 'kosz-build)
   (let* ((root            (car manifest))
          (manifest*       (cdr manifest))
          (assets-includes (thread-first (plist-get manifest* :assets)
@@ -116,10 +162,11 @@ Package full name is \"name-version\" string, like \"kosz-1.1.1\"."
                    (file-name-concat directory)
                    (kbuild--copy-file file)))))
 
-(defun kbuild--copy-readme-file (manifest directory)
+(defun kbuild-collect-readme-file (manifest directory)
   "Find listed in MANIFEST readme file and copy it to DIRECTORY as \"README\".
 
 Signal error if listed file is directory."
+  (require 'kosz-build)
   (when-let* ((root        (car manifest))
               (manifest*   (cdr manifest))
               (readme-file (thread-first (plist-get manifest* :readme)
@@ -128,8 +175,9 @@ Signal error if listed file is directory."
         (copy-file readme-file (file-name-concat directory "README"))
       (error (list ":readme file is directory" readme-file)))))
 
-(defun kbuild--build-docs (manifest directory)
+(defun kbuild-build-texi (manifest directory)
   "Find listed in MANIFEST \".texi\" files and build them in DIRECTORY."
+  (require 'kosz-build)
   (let* ((root           (car manifest))
          (manifest*      (cdr manifest))
          (docs-includes  (thread-first (plist-get manifest* :docs)
@@ -143,6 +191,16 @@ Signal error if listed file is directory."
                     (string= ".texi" (file-name-extension file t))))
       (kbuild--makeinfo manifest temp-directory)
       (mapc (lambda (file) (rename-file file directory))))))
+
+(defun kbuild-pack-package (manifest directory)
+  (require 'kosz-build)
+  (setq directory (file-name-directory directory))
+  (let* ((package-fullname (kbuild--package-full-name manifest))
+         (tar-file-name    (format "%s.tar" package-fullname)))
+    (kutils-call-process "tar" directory
+                         "-cf" tar-file-name
+                         package-fullname)
+    (file-name-concat directory tar-file-name)))
 
 
 
@@ -174,7 +232,8 @@ Skip properties what have no use for \"package.el\"."
           (unless (null maintainer)
             (cons (car maintainer) (cadr maintainer)))
           :authors
-          (mapcar (lambda (pair) (cons (car pair) (cadr pair))) authors))))
+          (mapcar (lambda (pair) (cons (car pair) (cadr pair)))
+                  authors))))
 
 (defun kbuild-build-docs (manifest)
   "Build package documentation for package described in MANIFEST.
@@ -186,44 +245,49 @@ Return path to directory with builded documentation."
   (let* ((root             (car manifest))
          (package-fullname (kbuild--package-full-name manifest))
          (build-directory  (file-name-concat
-                            root "build" package-fullname "docs/")))
-    (condition-case build-error
+                            root "build" package-fullname "docs/"))
+         (kbuild-build-package-functions (list #'kbuild-build-texi)))
+    (condition-case error
         (progn
           (make-directory build-directory t)
-          (kbuild--build-docs manifest build-directory)
+          (kbuild--run-build-process root t manifest build-directory)
           build-directory)
-      (error (signal 'kbuild-docs-building-error (cdr build-error))))))
+      (kutils-external-process-error
+       (signal 'kbuild-build-error (alist-get :output error)))
+      (error
+       (signal 'kbuild-build-error (cdr error))))))
 
-(defun kbuild-build-package (manifest)
-  "Build tar file for package described in MANIFEST.
+(defun kbuild-build-package (manifest &optional not-pack)
+  "Build package described in MANIFEST.
 
-Created tar file can be used by \"package.el\".  Extracted from tar directory
-can be used in `load-path'.
-Signal `kosz-build-package-building-error' If error cases while building.
+If NOT-PACK is non-nil created directory what can be loaded by
+`package-install-file' or added to `load-path'.  Otherwice pack that directory
+to tar file.
+Signal `kosz-build-package-building-error' if error cases while building.
 
 Return path to created tar file."
   (let* ((root              (car manifest))
          (package-fullname  (kbuild--package-full-name manifest))
-         (package-tar-file  (format "%s.tar" package-fullname))
          (package-directory (file-name-concat root "build" package-fullname))
          (build-directory   (file-name-as-directory ; For correct file moving.
                              (file-name-concat package-directory
                                                package-fullname))))
     (unwind-protect
-        (condition-case build-error
+        (condition-case error
             (progn
               (make-directory build-directory t)
-              (kbuild--generate-pkg-file manifest build-directory)
-              (kbuild--copy-src-files manifest build-directory)
-              (kbuild--copy-assets-files manifest build-directory)
-              (kbuild--copy-readme-file manifest build-directory)
-              (kbuild--build-docs manifest build-directory)
-              (kutils-call-process "tar" package-directory
-                                   "-cf" package-tar-file
-                                   package-fullname)
-              (expand-file-name package-tar-file package-directory))
-          (error (signal 'kbuild-build-error (cdr build-error))))
-      (delete-directory build-directory t))))
+              (kbuild--run-build-process root not-pack manifest build-directory)
+              (if not-pack
+                  build-directory
+                (with-temp-buffer
+                  (insert-file-contents kbuild--message-file-name)
+                  (buffer-substring-no-properties (point-min) (point-max)))))
+          (kutils-external-process-error
+           (signal 'kbuild-build-error (alist-get :output error)))
+          (error
+           (signal 'kbuild-build-error (cdr error))))
+      (delete-directory build-directory t)
+      (delete-file kbuild--message-file-name))))
 
 
 
