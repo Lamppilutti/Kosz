@@ -25,6 +25,7 @@
 ;;; Code:
 
 
+
 (eval-when-compile
   (require 'subr-x))
 
@@ -41,10 +42,10 @@
   "File for manifest dump.")
 
 (defconst kmanifest--version-regexp-alist
-  "Accepted version pre-release version identificators."
+  "Accepted pre-release version identificators."
   '(("^-rc$"    . -1)
     ("^-beta$"  . -2)
-    ("^-aplha$" . -3)))
+    ("^-alpha$" . -3)))
 
 
 
@@ -111,7 +112,9 @@ there are ERRORs at the end of validation.
 
 (defun kmanifest--pkg-name-p (object)
   "Return t if OBJECT is not nil and not keyword symbol."
-  (and (symbolp object) (not (keywordp object)) (not (null object))))
+  (and (symbolp object)
+       (not (keywordp object))
+       (not (null object))))
 
 (defun kmanifest--versionp (object)
   "Return t if OBJECT is string that `version-to-list' undertood."
