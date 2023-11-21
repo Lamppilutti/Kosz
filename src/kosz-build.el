@@ -128,7 +128,7 @@ ARGS is arg list for build and pack functions."
   "Create \"-pkg.el\" file from MANIFEST inside DIRECTORY."
   (require 'kosz-build)
   (let* ((manifest*           (cdr manifest))
-         (define-package-form (kbuild-manifest->define-package manifest))
+         (define-package-form (kmanifest-manifest->define-package manifest))
          (file-name           (format "%s-pkg.el" (plist-get manifest* :name))))
     (with-temp-file (file-name-concat directory file-name)
       (pp-emacs-lisp-code define-package-form)
@@ -203,37 +203,6 @@ Signal error if listed file is directory."
     (file-name-concat directory tar-file-name)))
 
 
-
-(defun kbuild-manifest->define-package (manifest)
-  "Return `define-package' form generated from MANIFEST.
-
-If MANIFEST extra properties are invalid signal
-`kosz-manifest-manifest-validation-error'.
-Skip properties what have no use for \"package.el\"."
-  (map-let ((:name         name)
-            (:version      version)
-            (:description  description)
-            (:dependencies dependencies)
-            (:url          url)
-            (:commit       commit)
-            (:keywords     keywords)
-            (:maintainer   maintainer)
-            (:authors      authors))
-      (cdr (kmanifest-validate-manifest manifest))
-    (list 'define-package
-          (format "%s" name)
-          version
-          description
-          dependencies
-          :url      url
-          :commit   commit
-          :keywords keywords
-          :maintainer
-          (unless (null maintainer)
-            (cons (car maintainer) (cadr maintainer)))
-          :authors
-          (mapcar (lambda (pair) (cons (car pair) (cadr pair)))
-                  authors))))
 
 (defun kbuild-build-docs (manifest)
   "Build package documentation for package described in MANIFEST.

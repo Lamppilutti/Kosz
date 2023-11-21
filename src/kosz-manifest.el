@@ -29,6 +29,7 @@
 (eval-when-compile
   (require 'subr-x))
 
+(require 'map)
 (require 'kosz-utils)
 
 
@@ -266,6 +267,37 @@ Path must not be \".\", \"..\" or \"\\\"")
      (and (symbolp it) (not (keywordp it)))
      "Property should be not nil symbol."))
   manifest)
+
+(defun kmanifest-manifest->define-package (manifest)
+  "Return `define-package' form generated from MANIFEST.
+
+If significant MANIFEST properties are invalid signal
+`kosz-manifest-manifest-validation-error'.
+Skip properties what have no use for \"package.el\"."
+  (map-let ((:name         name)
+            (:version      version)
+            (:description  description)
+            (:dependencies dependencies)
+            (:url          url)
+            (:commit       commit)
+            (:keywords     keywords)
+            (:maintainer   maintainer)
+            (:authors      authors))
+      (cdr (kmanifest-validate-manifest manifest))
+    (list 'define-package
+          (format "%s" name)
+          version
+          description
+          dependencies
+          :url      url
+          :commit   commit
+          :keywords keywords
+          :maintainer
+          (unless (null maintainer)
+            (cons (car maintainer) (cadr maintainer)))
+          :authors
+          (mapcar (lambda (pair) (cons (car pair) (cadr pair)))
+                  authors))))
 
 (defun kmanifest-read-manifest (directory)
   "Read manifest from DIRECTORY.
