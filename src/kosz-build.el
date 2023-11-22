@@ -122,7 +122,7 @@ Return path to package archive if NOT-PACK is nil, otherwice return nil."
   "Create \"-pkg.el\" file from MANIFEST inside DIRECTORY."
   (require 'kosz-build)
   (let* ((manifest*           (cdr manifest))
-         (define-package-form (kmanifest-manifest->define-package manifest))
+         (define-package-form (kmanifest-manifest->define-package manifest t))
          (file-name           (format "%s-pkg.el" (plist-get manifest* :name))))
     (with-temp-file (file-name-concat directory file-name)
       (pp-emacs-lisp-code define-package-form)

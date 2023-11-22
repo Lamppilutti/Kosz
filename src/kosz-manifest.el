@@ -27,9 +27,9 @@
 
 
 (eval-when-compile
+  (require 'map)
   (require 'subr-x))
 
-(require 'map)
 (require 'kosz-utils)
 
 
@@ -255,11 +255,13 @@ Path must not be \".\", \"..\" or \"\\\"")
      "Property should be not nil symbol."))
   manifest)
 
-(defun kmanifest-manifest->define-package (manifest)
+(defun kmanifest-manifest->define-package (manifest &optional not-validate)
   "Return `define-package' form generated from MANIFEST.
 
-If significant MANIFEST properties are invalid signal
-`kosz-manifest-manifest-validation-error'.
+If NOT-VALIDATE is nil then validate MANIFEST before converting.  Signal
+`kosz-manifest-manifest-validation-error' if significant properties are
+invialid.
+
 Skip properties what have no use for \"package.el\"."
   (map-let ((:name         name)
             (:version      version)
@@ -270,7 +272,9 @@ Skip properties what have no use for \"package.el\"."
             (:keywords     keywords)
             (:maintainer   maintainer)
             (:authors      authors))
-      (cdr (kmanifest-validate-manifest manifest))
+      (if not-validate
+          manifest
+        (kmanifest-validate-manifest manifest))
     (list 'define-package
           (format "%s" name)
           version
