@@ -97,24 +97,21 @@ Package full name is \"name-version\" string, like \"kosz-1.1.1\"."
   (setq manifest (cdr manifest))
   (format "%s-%s" (plist-get manifest :name) (plist-get manifest :version)))
 
-(defun kbuild--run-build-process (directory not-pack manifest build-directory)
+(defun kbuild--run-build-process (directory manifest build-directory)
   "Run package build process in DIRECTORY.
 
-If NOT-PACK is non-nil then not pack package in archive.
 MANIFEST is manifest, it will passed to build and pack functions.
 BUILD-DIRECTORY is directory what stores files of builded package, it will
 passed to build and pack functions.
 
-Return path to package archive if NOT-PACK is nil, otherwice return nil."
+Return path to created archive."
   (kutils-eval-in-other-process
    directory
    `(progn
       (setq load-path (append load-path ,kosz-build-load-path))
-      (mapc (lambda (function) (function ,manifest ,build-directory))
-            ,kbuild-build-package-functions)
-      (unless ,not-pack
-        (kosz--return-from-process
-         (,kbuild-pack-package-function ,manifest ,build-directory))))))
+      (mapc (lambda (function) (funcall function ,manifest ,build-directory))
+            kbuild-build-package-functions)
+      (funcall ,kbuild-pack-package-function ,manifest ,build-directory))))
 
 
 
@@ -213,17 +210,14 @@ Return path to directory with builded documentation."
     (condition-case error
         (progn
           (make-directory build-directory t)
-          (kbuild--run-build-process root t manifest build-directory)
+          (kbuild--run-build-process root manifest build-directory)
           build-directory)
       (error
        (signal 'kbuild-build-error (cdr error))))))
 
-(defun kbuild-build-package (manifest &optional not-pack)
+(defun kbuild-build-package (manifest)
   "Build package described in MANIFEST.
 
-If NOT-PACK is non-nil created directory what can be loaded by
-`package-install-file' or added to `load-path'.  Otherwice pack that directory
-to tar file.
 Signal `kosz-build-package-building-error' if error cases while building.
 
 Return path to package arvhive if NOT-PACK is nil, otherwice return nil."
@@ -236,11 +230,7 @@ Return path to package arvhive if NOT-PACK is nil, otherwice return nil."
     (condition-case error
         (progn
           (make-directory build-directory t)
-          (or (kbuild--run-build-process root
-                                         not-pack
-                                         manifest
-                                         build-directory)
-              build-directory))
+          (kbuild--run-build-process root manifest build-directory))
       (error
        (delete-directory build-directory t)
        (signal 'kbuild-build-error (cdr error))))))
