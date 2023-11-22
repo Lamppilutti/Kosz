@@ -205,15 +205,21 @@ Return path to directory with builded documentation."
   (let* ((root             (car manifest))
          (package-fullname (kbuild--package-full-name manifest))
          (build-directory  (file-name-concat
+                            root "build" package-fullname ".build/"))
+         (result-directory (file-name-concat
                             root "build" package-fullname "docs/"))
          (kbuild-build-package-functions (list #'kbuild-build-texi)))
-    (condition-case error
-        (progn
-          (make-directory build-directory t)
-          (kbuild--run-build-process root manifest build-directory)
-          build-directory)
-      (error
-       (signal 'kbuild-build-error (cdr error))))))
+    (unwind-protect
+        (condition-case error
+            (progn
+              (make-directory build-directory t)
+              (kbuild--run-build-process root manifest build-directory)
+              (delete-directory result-directory)
+              (rename-file build-directory result-directory)
+              result-directory)
+          (error
+           (signal 'kbuild-build-error (cdr error))))
+      (delete-directory build-directory t))))
 
 (defun kbuild-build-package (manifest)
   "Build package described in MANIFEST.
