@@ -134,25 +134,23 @@ about this function arguments."
   (with-current-buffer (find-file-noselect file)
     (checkdoc-current-buffer t)))
 
-(defun ktest--call-test-process (directory directories files test-runner)
-  "Run tests in separate Emacs process.
+(defun ktest--call-test-process (directory load-path* files test-runner)
+  "Run test process in DIRECTORY.
 
-Tests will runned inside DIRECTORY.  DIRECTORIES will added to `load-path'.
-FILES will loaded by `load'.  TEST-RUNNER function will called after loading
-DIRECTOIES and FILES, it should exit Emacs after work.
+LOAD-PATH* is list of paths is appended to `load-path'.
+FILES list of files is loaded in the process.
+TEST-RUNNER is function is called for running tests.
 
 If process ends with error return error message as result."
-  (let* ((--directories (mapcan (lambda (dir) (list "--directory" dir))
-                                directories))
-         (--load        (mapcan (lambda (file) (list "--load" file)) files))
-         (--funcall     (list "--funcall" (format "%s" test-runner))))
-    (condition-case process-error
-        (apply #'kutils-call-process "emacs" directory
-               "--batch" "--quick"
-               "--eval"  "(setq debugger-stack-frame-as-list t)"
-               (append --directories --load --funcall)) ; Order is important.
-      (kutils-external-process-error
-       (alist-get :output process-error)))))
+  (condition-case error
+      (kutils-eval-in-other-process
+       directory
+       `(progn
+          (setq load-path (append load-path ,load-path*))
+          (mapc #'load-file ,files)
+          (funcall ,test-runner)))
+    (kutils-external-process-error
+     (alist-get :output error))))
 
 
 

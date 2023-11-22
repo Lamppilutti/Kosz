@@ -38,12 +38,7 @@
 
 
 
-(defconst kbuild--message-file-name ".build-message"
-  "File for receive data from build process.")
-
-
-
-(defvar kbuild-load-directories
+(defvar kbuild-load-path
   (list (file-name-directory load-file-name)))
 
 (defvar kbuild-build-package-functions
@@ -102,25 +97,24 @@ Package full name is \"name-version\" string, like \"kosz-1.1.1\"."
   (setq manifest (cdr manifest))
   (format "%s-%s" (plist-get manifest :name) (plist-get manifest :version)))
 
-(defun kbuild--run-build-process (directory not-pack &rest args)
+(defun kbuild--run-build-process (directory not-pack manifest build-directory)
   "Run package build process in DIRECTORY.
-Not pack package if NOT-PACK is non-nil.
 
-ARGS is arg list for build and pack functions."
-  (kutils-call-process
-   "emacs" directory
-   "--batch" "--quick"
-   "--eval"
-   (thread-last
-     `(progn
-        (setq debugger-stack-frame-as-list t
-              load-path (append load-path ,kosz-build-load-directories))
-        (mapc (lambda (function) (apply function ,args))
-              ,kbuild-build-package-functions)
-        (unless ,not-pack
-          (with-temp-file ,kbuild--message-file-name
-            (insert (apply ,kosz-build-pack-package-function ,args)))))
-     (format "%S"))))
+If NOT-PACK is non-nil then not pack package in archive.
+MANIFEST is manifest, it will passed to build and pack functions.
+BUILD-DIRECTORY is directory what stores files of builded package, it will
+passed to build and pack functions.
+
+Return path to package archive if NOT-PACK is nil, otherwice return nil."
+  (kutils-eval-in-other-process
+   directory
+   `(progn
+      (setq load-path (append load-path ,kosz-build-load-path))
+      (mapc (lambda (function) (function ,manifest ,build-directory))
+            ,kbuild-build-package-functions)
+      (unless ,not-pack
+        (kosz--return-from-process
+         (,kbuild-pack-package-function ,manifest ,build-directory))))))
 
 
 
@@ -221,8 +215,6 @@ Return path to directory with builded documentation."
           (make-directory build-directory t)
           (kbuild--run-build-process root t manifest build-directory)
           build-directory)
-      (kutils-external-process-error
-       (signal 'kbuild-build-error (alist-get :output error)))
       (error
        (signal 'kbuild-build-error (cdr error))))))
 
@@ -234,29 +226,24 @@ If NOT-PACK is non-nil created directory what can be loaded by
 to tar file.
 Signal `kosz-build-package-building-error' if error cases while building.
 
-Return path to created tar file."
+Return path to package arvhive if NOT-PACK is nil, otherwice return nil."
   (let* ((root              (car manifest))
          (package-fullname  (kbuild--package-full-name manifest))
          (package-directory (file-name-concat root "build" package-fullname))
          (build-directory   (file-name-as-directory ; For correct file moving.
                              (file-name-concat package-directory
                                                package-fullname))))
-    (unwind-protect
-        (condition-case error
-            (progn
-              (make-directory build-directory t)
-              (kbuild--run-build-process root not-pack manifest build-directory)
-              (if not-pack
-                  build-directory
-                (with-temp-buffer
-                  (insert-file-contents kbuild--message-file-name)
-                  (buffer-substring-no-properties (point-min) (point-max)))))
-          (kutils-external-process-error
-           (signal 'kbuild-build-error (alist-get :output error)))
-          (error
-           (signal 'kbuild-build-error (cdr error))))
-      (delete-directory build-directory t)
-      (delete-file kbuild--message-file-name))))
+    (condition-case error
+        (progn
+          (make-directory build-directory t)
+          (or (kbuild--run-build-process root
+                                         not-pack
+                                         manifest
+                                         build-directory)
+              build-directory))
+      (error
+       (delete-directory build-directory t)
+       (signal 'kbuild-build-error (cdr error))))))
 
 
 

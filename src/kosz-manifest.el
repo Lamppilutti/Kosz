@@ -39,9 +39,6 @@
 
 
 
-(defconst kmanifest--dump-file-name ".manifest-dump"
-  "File for manifest dump.")
-
 (defconst kmanifest--version-regexp-alist
   "Accepted pre-release version identificators."
   '(("^-rc$"    . -1)
@@ -160,28 +157,18 @@ See `kosz-manifest--valid-file-path-p'"
     (setq object (cdr object)))
   (null object))
 
-(defun kmanifest--read-process-init-code (dump-file)
-  "Return code for initialazing Emacs for manifest reading.
-
-DUMP-FILE is file in which manifest will be dumped after reading."
-  `(progn
-     (setq debugger-stack-frame-as-list t)
-     (defun define-package (name version &rest properties)
-       (setq properties (plist-put properties :name name)
-             properties (plist-put properties :version version))
-       (with-temp-file ,dump-file
-         (insert (format "%S" properties))))))
-
-(defun kmanifest--run-read-process (directory dump-file)
+(defun kmanifest--run-read-process (directory)
   "Run manifest read process in DIRECTORY.
 
-Pass DUMP-FILE to reading process.
-See `kosz-manifest--read-process-init-code'."
-  (kutils-call-process
-   "emacs" directory
-   "--batch" "--quick"
-   "--eval"  (format "%S" (kmanifest--read-process-init-code dump-file))
-   "--load"  kmanifest-manifest-file-name))
+Return manifest property list."
+  (kutils-eval-in-other-process
+   directory
+   `(progn
+      (defun define-package (name version &rest properties)
+        (setq properties (plist-put properties :name name)
+              properties (plist-put properties :version version))
+        (kosz--return-from-process properties))
+      (load-file ,kmanifest-manifest-file-name))))
 
 
 
@@ -307,17 +294,11 @@ the manifest file was readed, and a PLIST is properties readed from the manifest
 file.  Package name and package version are passed as `:name' and `:version'
 respectively."
   (setq directory (expand-file-name directory))
-  (let* ((dump-file (file-name-concat directory kmanifest--dump-file-name)))
-    (unwind-protect
-        (condition-case error
-            (with-temp-buffer
-              (kmanifest--run-read-process directory dump-file)
-              (insert-file-contents dump-file)
-              (kmanifest-validate-manifest
-               (cons (abbreviate-file-name directory)
-                     (sexp-at-point))))
-          (error (signal 'kmanifest-manifest-reading-error (cdr error))))
-      (delete-file dump-file))))
+  (condition-case error
+      (kmanifest-validate-manifest
+       (cons (abbreviate-file-name directory)
+             (kmanifest--run-read-process directory)))
+    (error (signal 'kmanifest-manifest-reading-error (cdr error)))))
 
 
 

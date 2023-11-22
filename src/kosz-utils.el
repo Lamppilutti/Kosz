@@ -39,14 +39,6 @@
 
 
 
-(defun kutils--buffer-string ()
-  "Return the content of current buffer as a string without properties."
-  (declare (side-effect-free t))
-  (buffer-substring-no-properties (point-min) (point-max)))
-
-
-
-
 (defun kutils-call-process (program directory &rest args)
   "Return the result of executing PROGRAM as string.
 
@@ -58,13 +50,43 @@ Signal `kosz-utils--external-process-error' if PROGRAM ends with an error."
          (process-exit-code nil))
     (with-temp-buffer
       (setq process-exit-code (apply #'call-process program nil t nil args))
-      (if (= 0 process-exit-code)
-          (kutils--buffer-string)
+      (unless (= 0 process-exit-code)
         (signal 'kutils-external-process-error
                 (list (cons :process   program)
                       (cons :args      args)
                       (cons :exit-code process-exit-code)
-                      (cons :output    (kutils--buffer-string))))))))
+                      (cons :output    (buffer-substring-no-properties
+                                        (point-min)
+                                        (point-max)))))))))
+
+(defun kutils-eval-in-other-process (directory form)
+  "Run Emacs process inside DIRECTORY and eval FORM in it.
+
+Process starts as \"--batch --quick\" and with predefined
+`debugger-stack-frame-as-list' as t.  Other Emacs initialization should be in
+FORM.
+FORM can use `kosz--return-from-process' function for returning some Lisp object
+to parent process.  If form contains multiple calls of this function then result
+of last call will returned.
+Signal `kosz-utils--external-process-error' if process ends with an error.
+
+Return Lisp object passed to `kosz--return-from-process', if FORM does not
+call this function return nil."
+  (let* ((temp-file (make-temp-name ".kosz-process-")))
+    (unwind-protect
+        (with-temp-buffer
+          (kutils-call-process
+           "emacs" directory
+           "--batch" "--quick"
+           "--eval"  "(setq debugger-stack-frame-as-list t)"
+           "--eval"  (format "(defun kosz--return-from-process (object)
+                               (with-temp-file %S
+                                 (insert (format \"%%S\\n\" object))))"
+                             temp-file)
+           "--eval"  (format "%S" form))
+          (insert-file-contents temp-file)
+          (sexp-at-point))
+      (delete-file temp-file))))
 
 (defun kutils-directory-files-recursively (file)
   "As `directory-files-recursively', but if FILE is file return list with it.
