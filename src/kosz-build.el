@@ -185,12 +185,14 @@ Signal error if listed file is directory."
 
 (defun kbuild-pack-package (manifest directory)
   (require 'kosz-build)
-  (setq directory (file-name-directory directory))
   (let* ((package-fullname (kbuild--package-full-name manifest))
          (tar-file-name    (format "%s.tar" package-fullname)))
-    (kutils-call-process "tar" directory
-                         "-cf" tar-file-name
-                         package-fullname)
+    (kutils-call-process
+     "tar" (file-name-directory directory)
+     (format "--transform='s|%s|%s|'"
+             directory package-fullname)
+     "-cf" tar-file-name
+     directory)
     (file-name-concat directory tar-file-name)))
 
 
@@ -229,17 +231,16 @@ Signal `kosz-build-package-building-error' if error cases while building.
 Return path to package arvhive if NOT-PACK is nil, otherwice return nil."
   (let* ((root              (car manifest))
          (package-fullname  (kbuild--package-full-name manifest))
-         (package-directory (file-name-concat root "build" package-fullname))
-         (build-directory   (file-name-as-directory ; For correct file moving.
-                             (file-name-concat package-directory
-                                               package-fullname))))
-    (condition-case error
-        (progn
-          (make-directory build-directory t)
-          (kbuild--run-build-process root manifest build-directory))
-      (error
-       (delete-directory build-directory t)
-       (signal 'kbuild-build-error (cdr error))))))
+         (build-directory   (file-name-concat
+                             root "build" package-fullname ".build/")))
+    (unwind-protect
+        (condition-case error
+            (progn
+              (make-directory build-directory t)
+              (kbuild--run-build-process root manifest build-directory))
+          (error
+           (signal 'kbuild-build-error (cdr error))))
+      (delete-directory build-directory t))))
 
 
 
