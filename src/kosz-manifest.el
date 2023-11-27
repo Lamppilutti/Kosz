@@ -87,7 +87,7 @@ there are ERRORs at the end of validation.
             (let* ((property  (nth 0 case))
                    (condition (nth 1 case))
                    (error-msg (nth 2 case)))
-              `(let* ((it (plist-get ,manifest ,property)))
+              `(let* ((it (plist-get ,manifest-sym ,property)))
                  (cond
                   ((member ,property ,processed-sym)
                    (puthash ,property
