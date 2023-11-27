@@ -38,8 +38,8 @@
 
 
 
-(defvar kbuild-load-path
-  (list (file-name-directory load-file-name)))
+(defvar kbuild-load-files
+  (list load-file-name))
 
 (defvar kbuild-build-package-functions
   (list #'kbuild-make-pkg-file
@@ -108,9 +108,12 @@ Return path to created archive."
   (kutils-eval-in-other-process
    directory
    `(progn
-      (setq load-path (append load-path ,kosz-build-load-path))
+      (setq load-path
+            (append load-path
+                    ,(mapc #'file-name-directory kosz-build-load-files)))
+      (mapc #'load-file ,kosz-build-load-files)
       (mapc (lambda (function) (funcall function ,manifest ,build-directory))
-            kbuild-build-package-functions)
+            ,kbuild-build-package-functions)
       (funcall ,kbuild-pack-package-function ,manifest ,build-directory))))
 
 
