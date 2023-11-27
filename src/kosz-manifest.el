@@ -39,14 +39,6 @@
 
 
 
-(defconst kmanifest--version-regexp-alist
-  "Accepted pre-release version identificators."
-  '(("^-rc$"    . -1)
-    ("^-beta$"  . -2)
-    ("^-alpha$" . -3)))
-
-
-
 (define-error 'kmanifest-manifest-validation-error
   "Manifest has invalid properties")
 
@@ -116,9 +108,7 @@ there are ERRORs at the end of validation.
 
 (defun kmanifest--versionp (object)
   "Return t if OBJECT is string that `version-to-list' undertood."
-  (let* ((version-separator    ".")
-         (version-regexp-alist kmanifest--version-regexp-alist))
-    (ignore-errors (version-to-list object))))
+  (ignore-errors (version-to-list object)))
 
 (defun kmanifest--pair-p (object firstp secondp)
   "Return t if OBJECT is pair.
