@@ -26,6 +26,7 @@
 
 
 (require 'kosz-manifest)
+(require 'kosz-diagnostics)
 (require 'kosz-build)
 (require 'kosz-test)
 (require 'kosz-extra)
@@ -61,7 +62,7 @@
   (if-let* ((default-directory (kextra-find-package-root directory)))
       (thread-last
         (kmanifest-read-manifest default-directory)
-        (ktest-diagnose-package)
+        (kdiagnostics-diagnose-package)
         (pop-to-buffer))
     (user-error "Directory is not part of package" directory)))
 
@@ -70,10 +71,11 @@
 (provide 'kosz)
 
 ;; Local Variables:
-;; read-symbol-shorthands: (("kmanifest-" . "kosz-manifest-")
-;;                          ("kbuild-"    . "kosz-build-")
-;;                          ("ktest-"     . "kosz-test-")
-;;                          ("kextra-"    . "kosz-extra-"))
+;; read-symbol-shorthands: (("kmanifest-"    . "kosz-manifest-")
+;;                          ("kdiagnostics-" . "kosz-diagnostics-")
+;;                          ("kbuild-"       . "kosz-build-")
+;;                          ("ktest-"        . "kosz-test-")
+;;                          ("kextra-"       . "kosz-extra-"))
 ;; End:
 
 ;;; kosz.el ends here.

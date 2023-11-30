@@ -29,10 +29,8 @@
 (eval-when-compile
   (require 'subr-x))
 
-(require 'checkdoc)
 (require 'package)
 (require 'seq)
-(require 'warnings)
 
 (require 'kosz-manifest)
 (require 'kosz-utils)
@@ -42,41 +40,7 @@
 (define-error 'ktest-package-testing-error
   "Error while running tests")
 
-(define-error 'ktest-package-diagnostics-error
-  "Error while running diagnostics")
 
-
-
-(defun ktest--defect< (key1 key2)
-  "Return non-nil if KEY1 is less then KEY2.
-
-1. Split KEYS to records of three fields:
-file-name, line-number, collumn-number.
-2. If file-name fields are not equal then compare them by `string<'.
-3. Else if line-number fields are not equal then compare them by `='.
-4. Else compare collumn-number fields by `='.
-
-This function should be used in `sort-subr', so see its doc for information
-about this function arguments."
-  (let* ((string1       (buffer-substring-no-properties (car key1) (cdr key1)))
-         (string2       (buffer-substring-no-properties (car key2) (cdr key2)))
-         (string-parts1 (string-split string1 ":"))
-         (file1         (nth 0 string-parts1))
-         (line1         (string-to-number (nth 1 string-parts1)))
-         (collumn1      (condition-case _
-                            (string-to-number (nth 2 string-parts1))
-                          (error 0)))
-         (string-parts2 (string-split string2 ":"))
-         (file2         (nth 0 string-parts2))
-         (line2         (string-to-number (nth 1 string-parts2)))
-         (collumn2      (condition-case _
-                            (string-to-number (nth 2 string-parts2))
-                          (error 0))))
-    (if (string= file1 file2)
-        (if (= line1 line2)
-            (< collumn1 collumn2)
-          (< line1 line2))
-      (string< file1 file2))))
 
 (defun ktest--get-tests (manifest)
   "Find listed in MANIFEST test files."
@@ -127,13 +91,6 @@ about this function arguments."
             (directory-files package-user-dir t
                              directory-files-no-dot-files-regexp))))
 
-(defun ktest--checkdock-file (file)
-  ;; Do what `checkdoc-file' does, but without shadowing
-  ;; `checkdoc-diagnostic-buffer' variable.
-  "Check FILE for document, comment, error style, and rogue spaces."
-  (with-current-buffer (find-file-noselect file)
-    (checkdoc-current-buffer t)))
-
 (defun ktest--call-test-process (directory load-path* files test-runner)
   "Run test process in DIRECTORY.
 
@@ -153,36 +110,6 @@ If process ends with error return error message as result."
      (alist-get :output error))))
 
 
-
-(defun ktest-diagnose-package (manifest)
-  "Run diagnostics for project described in MANIFEST."
-  (let* ((manifest*     (cdr manifest))
-         (src-files     (ktest--get-src-files manifest))
-         (result-buffer (format "*Kosz diagnostic for: '%s'*"
-                                (plist-get manifest* :name)))
-         (byte-compile-dest-file-function #'ignore)
-         (warning-minimum-level           :emergency)
-         (display-buffer-alist            (list
-                                           (list result-buffer
-                                                 #'display-buffer-no-window
-                                                 '(allow-no-window t))))
-         (byte-compile-log-buffer         result-buffer)
-         (checkdoc-diagnostic-buffer      result-buffer)
-         (inhibit-read-only               t))
-    (condition-case diagnostics-error
-        (with-current-buffer (get-buffer-create result-buffer)
-          (save-excursion
-            (erase-buffer)
-            (mapc #'byte-compile-file src-files)
-            (mapc #'ktest--checkdock-file src-files)
-            (delete-non-matching-lines "^.*.el:[[:digit:]]+:"
-                                       (point-min)
-                                       (point-max))
-            (sort-subr nil 'forward-line 'end-of-line nil nil #'ktest--defect<)
-            (emacs-lisp-compilation-mode)
-            (current-buffer)))
-      (error (signal 'ktest-package-diagnostics-error
-                     (cdr diagnostics-error))))))
 
 (defun ktest-test-package (manifest)
   "Run tests described in package MANIFEST.
